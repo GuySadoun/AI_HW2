@@ -1,14 +1,22 @@
 """
 MiniMax Player
 """
+import numpy as np
+
+from Game import Game
+from SearchAlgos import MiniMax
 from players.AbstractPlayer import AbstractPlayer
 #TODO: you can import more modules, if needed
 
 
 class Player(AbstractPlayer):
+
     def __init__(self, game_time, penalty_score):
-        AbstractPlayer.__init__(self, game_time, penalty_score) # keep the inheritance of the parent's (AbstractPlayer) __init__()
+        # keep the inheritance of the parent's (AbstractPlayer) __init__()
+        AbstractPlayer.__init__(self, game_time, penalty_score)
         #TODO: initialize more fields, if needed, and the Minimax algorithm from SearchAlgos.py
+        self.board = None
+        self.pos = None
 
 
     def set_game_params(self, board):
@@ -20,7 +28,10 @@ class Player(AbstractPlayer):
         No output is expected.
         """
         #TODO: erase the following line and implement this function.
-        raise NotImplementedError
+        self.board = board
+        pos = np.where(board == 1)
+        # convert pos to tuple of ints
+        self.pos = tuple(ax[0] for ax in pos)
 
     def make_move(self, time_limit, players_score):
         """Make move with this Player.
@@ -29,8 +40,7 @@ class Player(AbstractPlayer):
         output:
             - direction: tuple, specifing the Player's movement, chosen from self.directions
         """
-        #TODO: erase the following line and implement this function.
-        raise NotImplementedError
+        minimax = MiniMax()
 
 
     def set_rival_move(self, pos):
@@ -61,3 +71,6 @@ class Player(AbstractPlayer):
 
     ########## helper functions for MiniMax algorithm ##########
     #TODO: add here the utility, succ, and perform_move functions used in MiniMax algorithm
+    @staticmethod
+    def utility_f():
+

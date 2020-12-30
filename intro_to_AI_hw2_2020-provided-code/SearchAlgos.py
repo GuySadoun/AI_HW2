@@ -5,7 +5,7 @@ from utils import ALPHA_VALUE_INIT, BETA_VALUE_INIT
 
 
 class SearchAlgos:
-    def __init__(self, utility, succ, perform_move, goal=None):
+    def __init__(self, utility, succ, perform_move, goal=None, heuristic_f=None):
         """The constructor for all the search algos.
         You can code these functions as you like to, 
         and use them in MiniMax and AlphaBeta algos as learned in class
@@ -17,6 +17,9 @@ class SearchAlgos:
         self.utility = utility
         self.succ = succ
         self.perform_move = perform_move
+        self.goal = goal
+        self.h = heuristic_f
+
 
     def search(self, state, depth, maximizing_player):
         pass
@@ -31,8 +34,32 @@ class MiniMax(SearchAlgos):
         :param maximizing_player: Whether this is a max node (True) or a min node (False).
         :return: A tuple: (The min max algorithm value, The direction in case of max node or None in min mode)
         """
-        #TODO: erase the following line and implement this function.
-        raise NotImplementedError
+        if self.goal(state):
+            return [self.utility(state), None]
+        if depth == 0:
+            return [self.h(state), None]
+        direction = None
+        if maximizing_player:
+            max_val = float('-inf')
+            for op in self.succ(state):
+                new_state = self.perform_move(op, True)
+                res = self.search(new_state, depth - 1, not maximizing_player)
+                if res[0] > max_val:
+                    direction = op
+                    max_val = res[0]
+                self.perform_move(op, False)
+            return max_val, direction
+        else:
+            min_val = float('inf')
+            for op in self.succ(state):
+                new_state = self.perform_move(op, True)
+                res = self.search(new_state, depth - 1, not maximizing_player)
+                if res[0] < min_val:
+                    direction = op
+                    min_val = res[0]
+                self.perform_move(op, False)
+            return min_val, direction
+
 
 
 class AlphaBeta(SearchAlgos):

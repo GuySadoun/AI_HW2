@@ -12,7 +12,7 @@ if __name__ == "__main__":
     parser.add_argument('-player1', default='LivePlayer', type=str, 
                         help='The type of the first player.',
                         choices=players_options)
-    parser.add_argument('-player2', default='LivePlayer',  type=str, 
+    parser.add_argument('-player2', default='SimplePlayer',  type=str,
                         help='The type of the second player.',
                         choices=players_options)
     
