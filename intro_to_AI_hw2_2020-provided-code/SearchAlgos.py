@@ -43,6 +43,7 @@ class MiniMax(SearchAlgos):
         if maximizing_player:
             max_val = float('-inf')
             for op in self.succ(state):
+                prev_val = state
                 new_state = self.perform_move(op, True)
                 res = self.search(new_state, depth - 1, not maximizing_player)
                 if res[0] > max_val:
@@ -76,3 +77,5 @@ class AlphaBeta(SearchAlgos):
         """
         #TODO: erase the following line and implement this function.
         raise NotImplementedError
+
+
