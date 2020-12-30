@@ -75,12 +75,30 @@ class Player(AbstractPlayer):
     #TODO: add here the utility, succ, and perform_move functions used in MiniMax algorithm
     def utility_f(self, players_score):
 
-    def succ_f(self, state):
+    #returns possible directions to move
+    def succ_f(self):
+        for d in self.directions:
+            i = self.pos[0] + d[0]
+            j = self.pos[1] + d[1]
 
+            if 0 <= i < len(self.board) and 0 <= j < len(self.board[0]) and \
+                    (self.board[i][j] not in [-1, 1, 2]):  # then move is legal
+                yield d[0], d[1]
 
-    def perform_move_f(self, ):
-        pass
+    #gets an op and moves the player accroding to this op
+    def perform_move_f(self, op, is_not_reversed):
+        player_number = self.board[self.pos[0], self.pos[1]]
+
+        if is_not_reversed:
+            self.board[self.pos[0], self.pos[1]] = -1
+            self.pos = (self.pos[0] + op[0], self.pos[1] + op[1])
+        else:
+            self.board[self.pos[0], self.pos[1]] = 0
+            self.pos = (self.pos[0] - op[0], self.pos[1] - op[1])
+
+        self.board[self.pos[0], self.pos[1]] = player_number
+
 
     def heuristic_f(self, ):
-        pass
+
 
