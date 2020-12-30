@@ -40,7 +40,9 @@ class Player(AbstractPlayer):
         output:
             - direction: tuple, specifing the Player's movement, chosen from self.directions
         """
-        minimax = MiniMax()
+        minimax = MiniMax(self.utility_f(), self.succ_f(), self.perform_move_f(), )
+        val = minimax.search()
+        ### making move as writen in val[1] ###
 
 
     def set_rival_move(self, pos):
@@ -71,6 +73,14 @@ class Player(AbstractPlayer):
 
     ########## helper functions for MiniMax algorithm ##########
     #TODO: add here the utility, succ, and perform_move functions used in MiniMax algorithm
-    @staticmethod
-    def utility_f():
+    def utility_f(self, players_score):
+
+    def succ_f(self, state):
+
+
+    def perform_move_f(self, ):
+        pass
+
+    def heuristic_f(self, ):
+        pass
 

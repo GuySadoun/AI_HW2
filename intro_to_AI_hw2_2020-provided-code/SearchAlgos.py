@@ -5,7 +5,7 @@ from utils import ALPHA_VALUE_INIT, BETA_VALUE_INIT
 
 
 class SearchAlgos:
-    def __init__(self, utility, succ, perform_move, goal=None, heuristic_f=None):
+    def __init__(self, utility, succ, perform_move, players_score, goal=None, heuristic_f=None):
         """The constructor for all the search algos.
         You can code these functions as you like to, 
         and use them in MiniMax and AlphaBeta algos as learned in class
@@ -17,17 +17,18 @@ class SearchAlgos:
         self.utility = utility
         self.succ = succ
         self.perform_move = perform_move
+        self.players_score = players_score
         self.goal = goal
         self.h = heuristic_f
 
 
-    def search(self, state, depth, maximizing_player):
+    def search(self, state, depth, maximizing_player, players_score):
         pass
 
 
 class MiniMax(SearchAlgos):
 
-    def search(self, state, depth, maximizing_player):
+    def search(self, state, depth, maximizing_player, players_score):
         """Start the MiniMax algorithm.
         :param state: The state to start from.
         :param depth: The maximum allowed depth for the algorithm.
@@ -35,9 +36,9 @@ class MiniMax(SearchAlgos):
         :return: A tuple: (The min max algorithm value, The direction in case of max node or None in min mode)
         """
         if self.goal(state):
-            return [self.utility(state), None]
+            return [self.utility(state, players_score, maximizing_player), None]
         if depth == 0:
-            return [self.h(state), None]
+            return [self.h(state, players_score), None]
         direction = None
         if maximizing_player:
             max_val = float('-inf')
