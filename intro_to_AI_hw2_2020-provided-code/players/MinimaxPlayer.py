@@ -74,6 +74,12 @@ class Player(AbstractPlayer):
     ########## helper functions for MiniMax algorithm ##########
     #TODO: add here the utility, succ, and perform_move functions used in MiniMax algorithm
     def utility_f(self, players_score):
+        if players_score[0] - players_score[1] > 0:
+            return 1
+        elif players_score[0] - players_score[1] < 0:
+            return -1
+        else:
+            return 0
 
     #returns possible directions to move
     def succ_f(self):
@@ -100,5 +106,5 @@ class Player(AbstractPlayer):
 
 
     def heuristic_f(self, ):
-
+        pass
 
