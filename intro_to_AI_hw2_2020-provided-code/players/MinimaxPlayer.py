@@ -170,13 +170,13 @@ class Player(AbstractPlayer):
         for i in range(len(self.state.board)):
             for j in range(len(self.state.board[0])):
                 if self.state.board[i][j] > 2:
-                    current_fruits_pos += tuple(i, j)
+                    current_fruits_pos.append((i, j))
         for fruit_pos in current_fruits_pos:
             self.state.board[fruit_pos] = 0
         # if len(current_fruits_positions[0]) == 0:
         #     return
-        for fruit_tuple in fruits_on_board_dict:
-            self.state.board[fruit_tuple] = fruit_tuple[1]
+        for pos in fruits_on_board_dict.keys():
+            self.state.board[pos] = fruits_on_board_dict[pos]
 
     ########## helper functions in class ##########
     # TODO: add here helper functions in class, if needed
