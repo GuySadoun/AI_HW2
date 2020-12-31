@@ -39,17 +39,18 @@ class MiniMax(SearchAlgos):
         :param maximizing_player: Whether this is a max node (True) or a min node (False).
         :return: A tuple: (The min max algorithm value, The direction in case of max node or None in min mode)
         """
-        if self.goal(state):
-            return self.utility(state, players_score), None
+        if self.goal():
+            return self.utility(state, players_score, maximizing_player), None
         if depth == 0:
-            return self.h(state, players_score), None
+            return self.h(), None
         direction = None
         prev_val = state.board[state.get_pos()]
         if maximizing_player:
             max_val = float('-inf') # infinity
             for op in self.succ(state):
+                prev_val = state.board[state.get_pos()]
                 new_state = self.perform_move(op, True, prev_val, players_score)
-                res = self.search(new_state, depth - 1, not maximizing_player)
+                res = self.search(new_state, depth - 1, not maximizing_player, players_score, start_time, time_limit)
                 if res[1] == 'Interrupted':
                     return res
                 if res[0] > max_val:
@@ -62,8 +63,9 @@ class MiniMax(SearchAlgos):
         else:
             min_val = float('inf') # minus infinity
             for op in self.succ(state):
+                prev_val = state.board[state.get_pos()]
                 new_state = self.perform_move(op, True, prev_val, players_score)
-                res = self.search(new_state, depth - 1, not maximizing_player)
+                res = self.search(new_state, depth - 1, not maximizing_player, players_score, start_time, time_limit)
                 if res[1] == 'Interrupted':
                     return res
                 if res[0] < min_val:

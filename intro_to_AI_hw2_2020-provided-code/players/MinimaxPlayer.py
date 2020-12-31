@@ -110,7 +110,7 @@ class Player(AbstractPlayer):
         pos = np.where(board == 1)
         # convert pos to tuple of ints
         self.pos = tuple(ax[0] for ax in pos)
-        players_score_init = (0, 0)
+        players_score_init = [0, 0]
         self.state = State(board, players_score_init, 1)
         # TODO: maybe need to change player_number to 0?
 
@@ -234,7 +234,7 @@ class Player(AbstractPlayer):
         v3 = (1 / 3) * option_for_me
         return (1 / 3) * (v1 + v2 + v3)
 
-    def goal_f(self, state):
-        if state.state_options(self.state.board, self.pos) == 0:
+    def goal_f(self):
+        if self.state.state_options(self.state.board, self.pos) == 0:
             return True
         return False
