@@ -32,31 +32,6 @@ class State:
             if 0 <= i < len(board) and 0 <= j < len(board[0]) and (board[i][j] not in [-1, 1, 2]):
                 num_ops_available += 1
         return num_ops_available
-        # if num_ops_available == 0:
-        #     return -1
-        # else:
-        #     return 4 - num_ops_available
-
-    # def heuristic_value(self):
-    # pos = np.where(self.board == 1)
-    # pos = tuple(ax[0] for ax in pos)
-    # rival_pos = np.where(self.board == 2)
-    # rival_pos = tuple(ax[0] for ax in rival_pos)
-    # max_fruit = 0
-    # if self.player_number <= min(self.board.shape[0], self.board.shape[1]):
-    #     for x in range(self.board.shape[0]):
-    #         for y in range(self.board.shape[1]):
-    #             if self.board[x, y] > 2:
-    #                 if not self.maximizing_player:#my turn, its my succ state
-    #                     md_fruit = abs(x - pos[0]) + abs(y - pos[1])
-    #                 else:
-    #                     md_fruit = abs(x - rival_pos[0]) + abs(y - rival_pos[1])
-    #                 temp = self.board[x,y] / md_fruit
-    #                 if temp > max_fruit and md_fruit < min(self.board.shape[0],self.board.shape[1])/2:
-    #                     max_fruit = temp
-    # md_other_player = abs(pos[0]-rival_pos[0])+abs(pos[1]-rival_pos[1])
-    # stateScore=self.state_options(self.board, pos) if not self.maximizing_player else self.state_options(self.board, rival_pos)
-    # return max_fruit+self.scores[0 if not self.maximizing_player else 1]-self.scores[0 if self.maximizing_player else 1]-(1/md_other_player)+stateScore+self.NR_reachable_blocks(False)-self.NR_reachable_blocks(True)+self.turn_counter
 
     def reachable_white_cells(self, player_number):
         if player_number == 1:
@@ -153,13 +128,13 @@ class Player(AbstractPlayer):
         maximizing_player = 1  # TODO: calculate according to player_number?
         depth = 1
         # time_limits = [start_time, time_limit]
-        val, move, interrupted = minimax.search(self.state, depth, True,
+        val, move = minimax.search(self.state, depth, True,
                                                 self.state.players_score, start_time, time_limit)
         while True:
             depth += 1
-            val, result, direction = minimax.search(self.state, depth, True,
+            val, result = minimax.search(self.state, depth, True,
                                                       self.state.players_score, start_time, time_limit)
-            if direction == "Interrupted":
+            if result == "Interrupted":
                 return move
             else:
                 move = result
@@ -191,13 +166,17 @@ class Player(AbstractPlayer):
         No output is expected.
         """
         # erase the following line and implement this function. In case you choose not to use it, use 'pass' instead of the following line.
-        current_fruits_pos = np.where(self.state.board > 2)
-        for fruit_pos in current_fruits_pos[0]:
+        current_fruits_pos = []
+        for i in range(len(self.state.board)):
+            for j in range(len(self.state.board[0])):
+                if self.state.board[i][j] > 2:
+                    current_fruits_pos += tuple(i, j)
+        for fruit_pos in current_fruits_pos:
             self.state.board[fruit_pos] = 0
         # if len(current_fruits_positions[0]) == 0:
         #     return
         for fruit_tuple in fruits_on_board_dict:
-            self.state.board[fruit_tuple[0]] = fruit_tuple[1]
+            self.state.board[fruit_tuple] = fruit_tuple[1]
 
     ########## helper functions in class ##########
     # TODO: add here helper functions in class, if needed
@@ -211,22 +190,16 @@ class Player(AbstractPlayer):
             return -1
         else:
             return 0
-        # return state.get_scores()[0] if maximizing_player else state.get_scores()[1]
-        # diff = state.get_scores()[0] - state.get_scores()[1]
-        # diff += (1 / (3 * self.board.shape[0] * self.board.shape[1])) * state.turn_counter if diff <= 0 else 0
-        # if self.both_stuck(state):
-        #    return diff
-        # # return diff between scores, only 1 stuck
-        # return diff - state.penalty_score if maximizing_player else diff + state.penalty_score
 
     # returns possible directions to move
     def succ_f(self, state):
         pos = np.where(state.board == state.player_number)
         for d in self.directions:
-            i = self.pos[0] + d[0]
-            j = self.pos[1] + d[1]
-
-            if 0 <= i < len(state.board) and 0 <= j < len(state.board[0]) and \
+            i = pos[0] + d[0]
+            j = pos[1] + d[1]
+            lines = len(state.board)
+            columns = len(state.board[0])
+            if 0 <= i < lines and 0 <= j < columns and \
                     (state.board[i][j] not in [-1, 1, 2]):  # then move is legal
                 yield d[0], d[1]
 
@@ -237,10 +210,10 @@ class Player(AbstractPlayer):
         if is_not_reversed:
             self.state.board[self.pos[0], self.pos[1]] = -1
             self.pos = (self.pos[0] + op[0], self.pos[1] + op[1])
-            players_score[int(player_number - 1)] += int(prev_val)
+            players_score[player_number - 1] += prev_val
         else:
-            self.state.board[self.pos[0], self.pos[1]] = int(prev_val)
-            players_score[int(player_number - 1)] -= int(prev_val)
+            self.state.board[self.pos[0], self.pos[1]] = prev_val
+            players_score[player_number - 1] -= prev_val
             self.pos = (self.pos[0] - op[0], self.pos[1] - op[1])
 
         self.state.board[self.pos[0], self.pos[1]] = player_number

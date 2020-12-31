@@ -70,8 +70,8 @@ if __name__ == "__main__":
 
     # create game with the given args
     game = GameWrapper(board[0], board[1], board[2], player_1=player_1, player_2=player_2,
-                    terminal_viz= True, #args.terminal_viz,
-                    print_game_in_terminal=True,#not args.dont_print_game,
+                    terminal_viz= args.terminal_viz,
+                    print_game_in_terminal=not args.dont_print_game,
                     time_to_make_a_move=args.move_time, 
                     game_time=game_time, 
                     penalty_score = args.penalty_score,
