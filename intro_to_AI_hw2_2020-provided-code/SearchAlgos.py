@@ -1,5 +1,7 @@
 """Search Algos: MiniMax, AlphaBeta
 """
+import time
+
 from utils import ALPHA_VALUE_INIT, BETA_VALUE_INIT
 #TODO: you can import more modules, if needed
 
@@ -21,14 +23,13 @@ class SearchAlgos:
         self.goal = goal
         self.h = heuristic_f
 
-
-    def search(self, state, depth, maximizing_player, players_score):
+    def search(self, state, depth, maximizing_player, players_score, start_time, time_limit):
         pass
 
 
 class MiniMax(SearchAlgos):
 
-    def search(self, state, depth, maximizing_player, players_score):
+    def search(self, state, depth, maximizing_player, players_score, start_time, time_limit):
         """Start the MiniMax algorithm.
         :param state: The state to start from.
         :param depth: The maximum allowed depth for the algorithm.
@@ -50,7 +51,9 @@ class MiniMax(SearchAlgos):
                     direction = op
                     max_val = res[0]
                 self.perform_move(op, False)
-            return max_val, direction
+                if time.time() - start_time > time_limit:
+                    return max_val, direction, True
+            return max_val, direction, False
         else:
             min_val = float('inf')
             for op in self.succ(state):
@@ -60,8 +63,9 @@ class MiniMax(SearchAlgos):
                     direction = op
                     min_val = res[0]
                 self.perform_move(op, False)
-            return min_val, direction
-
+                if time.time() - start_time > time_limit:
+                    return min_val, direction, True
+            return min_val, direction, False
 
 
 class AlphaBeta(SearchAlgos):
@@ -75,7 +79,7 @@ class AlphaBeta(SearchAlgos):
         :param: beta: beta value
         :return: A tuple: (The min max algorithm value, The direction in case of max node or None in min mode)
         """
-        #TODO: erase the following line and implement this function.
+        # TODO: erase the following line and implement this function.
         raise NotImplementedError
 
 

@@ -1,6 +1,8 @@
 """
 MiniMax Player
 """
+import time
+
 import numpy as np
 
 import utils
@@ -11,12 +13,12 @@ from players.AbstractPlayer import AbstractPlayer
 
 
 class State:
-    def _init_(self, board, players_score, maximizing_player, turn_number, penalty_score):
+    def _init_(self, board, players_score, turn_number, maximizing_player):
         self.board = board
         self.players_score = players_score
-        self.maximizing_player = maximizing_player
-        self.penalty_score = penalty_score
         self.turn_number = turn_number
+        # self.penalty_score = penalty_score
+        self.maximizing_player = maximizing_player
         #self.time = time
         #self.time_limit = time_limit
 
@@ -34,23 +36,6 @@ class State:
         #     return 4 - num_ops_available
 
     def heuristic_value(self):
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         # pos = np.where(self.board == 1)
         # pos = tuple(ax[0] for ax in pos)
         # rival_pos = np.where(self.board == 2)
@@ -112,6 +97,9 @@ class State:
         opponent_pos = np.where(self.board == 2)
         return tuple(ax[0] for ax in opponent_pos)
 
+    def get_turn_number(self):
+        return self.turn_number
+
     def get_maximizing_player(self):
         return self.maximizing_player
 
@@ -128,9 +116,9 @@ class Player(AbstractPlayer):
         # keep the inheritance of the parent's (AbstractPlayer) __init__()
         AbstractPlayer.__init__(self, game_time, penalty_score)
         # initialize more fields, if needed, and the Minimax algorithm from SearchAlgos.py
-        self.board = None
         self.pos = None
-
+        self.state = None
+        # self.board = None
 
     def set_game_params(self, board):
         """Set the game parameters needed for this player.
@@ -141,10 +129,13 @@ class Player(AbstractPlayer):
         No output is expected.
         """
         #erase the following line and implement this function.
-        self.board = board
+        # self.board = board
         pos = np.where(board == 1)
         # convert pos to tuple of ints
         self.pos = tuple(ax[0] for ax in pos)
+        players_score_init = [0,0]
+        self.state = State(board, players_score_init, 1, player_num)
+        # TODO: maybe need to change turn_number to 0?
 
     def make_move(self, time_limit, players_score):
         """Make move with this Player.
@@ -153,8 +144,29 @@ class Player(AbstractPlayer):
         output:
             - direction: tuple, specifing the Player's movement, chosen from self.directions
         """
-        minimax = MiniMax(self.utility_f(), self.succ_f(), self.perform_move_f(), )
-        val = minimax.search()
+        start_time = time.time()
+        minimax = MiniMax(self.utility_f, self.succ_f(), self.perform_move_f, self.state.players_score, heuristic_f=self.heuristic_f)
+
+        maximizing_player = 1 #TODO: calculate according to turn_number?
+        depth = 1
+        # time_limits = [start_time, time_limit]
+        val, move, interrupted = minimax.search(self.state, depth, self.state.maximizing_player,
+                                                self.state.players_score, start_time, time_limit)
+        while True:
+            depth+=1
+            val, result, interrupted = minimax.search(self.state, depth, self.state.maximizing_player,
+                                                         self.state.players_score, start_time, time_limit)
+            if interrupted:
+                return move
+            else:
+                move = result
+
+        # end_time = time.time()
+        # if end_time - start_time > time_limit:
+        #     end_time = time.time()
+
+        # handle time limit: game will be finished, and score will be lowered
+
         ### making move as writen in val[1] ###
 
 
