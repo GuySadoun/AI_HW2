@@ -131,6 +131,8 @@ class Player(AbstractPlayer):
         val, move = minimax.search(self.state, 5, True,
                                    self.state.players_score, start_time, time_limit)
         print(f'move is: {move}')
+        assert len(self.get_indexs_by_cond(lambda x: x == 2)) == 1
+        assert len(self.get_indexs_by_cond(lambda x: x == 1)) == 1
         return move
         # while True:
         #     depth += 1
@@ -156,7 +158,8 @@ class Player(AbstractPlayer):
         No output is expected
         """
         # erase the following line and implement this function.
-        self.state.board[pos] = -1
+        self.state.board[self.get_indexs_by_cond(lambda x: x == 2)[0]] = -1
+        self.state.board[pos] = 2
         # TODO: maybe need to change
 
     def update_fruits(self, fruits_on_board_dict):
@@ -176,6 +179,9 @@ class Player(AbstractPlayer):
         for pos in fruits_on_board_dict.keys():
             self.state.board[pos] = fruits_on_board_dict[pos]
 
+        assert len(self.get_indexs_by_cond(lambda x: x == 2)) == 1
+        assert len(self.get_indexs_by_cond(lambda x: x == 1)) == 1
+
     ########## helper functions in class ##########
     # TODO: add here helper functions in class, if needed
 
@@ -190,8 +196,7 @@ class Player(AbstractPlayer):
             return 0
 
     # returns possible directions to move
-    def succ_f(self, state):
-        pos = self.get_indexs_by_cond(lambda x: x == state.player_number)[0]
+    def succ_f(self, state, pos):
         for d in self.directions:
             i = pos[0] + d[0]
             j = pos[1] + d[1]
@@ -202,19 +207,30 @@ class Player(AbstractPlayer):
                 yield d[0], d[1]
 
     # gets an op and moves the player accroding to this op, prev_val will be passed before recursic call
-    def perform_move_f(self, op, is_not_reversed, prev_val, players_score):
-        player_number = self.state.board[self.pos[0], self.pos[1]]
-
+    def perform_move_f(self, op, is_not_reversed, prev_val, players_score, move_opponent):
+        player_move = 2 if move_opponent else 1
+        pos = self.get_indexs_by_cond(lambda x: x == player_move)[0]
+        assert len(self.get_indexs_by_cond(lambda x: x == 2)) == 1
+        print(f'-move player {player_move}')
+        print(f'-pos {pos}')
         if is_not_reversed:
-            self.state.board[self.pos[0], self.pos[1]] = -1
-            self.pos = (self.pos[0] + op[0], self.pos[1] + op[1])
-            players_score[int(player_number) - 1] += prev_val
+            self.state.board[pos] = -1
+            new_pos = (pos[0] + op[0], pos[1] + op[1])
+            players_score[player_move - 1] += prev_val
+            print(f'-put -1 in {pos}')
         else:
-            self.state.board[self.pos[0], self.pos[1]] = prev_val
-            players_score[int(player_number) - 1] -= prev_val
-            self.pos = (self.pos[0] - op[0], self.pos[1] - op[1])
+            assert prev_val not in [1, 2]
+            self.state.board[pos[0], pos[1]] = prev_val
+            players_score[player_move - 1] -= prev_val
+            new_pos = (pos[0] - op[0], pos[1] - op[1])
+            print(f'-put {prev_val} in {pos}')
 
-        self.state.board[self.pos[0], self.pos[1]] = player_number
+        self.state.board[new_pos] = player_move
+        self.print_board(self.state)
+        print(f'-len(self.get_indexs_by_cond(lambda x: x == 2)) == {len(self.get_indexs_by_cond(lambda x: x == 2))}')
+        print(f'-len(self.get_indexs_by_cond(lambda x: x == 1)) == {len(self.get_indexs_by_cond(lambda x: x == 1))}\n')
+        assert len(self.get_indexs_by_cond(lambda x: x == 2)) == 1
+        assert len(self.get_indexs_by_cond(lambda x: x == 1)) == 1
         return self.state
 
     def heuristic_f(self, state):
@@ -231,8 +247,14 @@ class Player(AbstractPlayer):
         v2 = 1 / option_for_op if option_for_op > 0 else 1
         option_for_me = state.state_options(self.pos)
         v3 = (1 / 3) * option_for_me
+        difference = self.state.players_score[0] - self.state.players_score[1]
+        v4 = difference / 150 if difference > 0 else 0
+        print('########DBG PRINT########')
+        self.print_board(state)
+        print('#########################')
+
         print(f'v1={v1} , v2={v2} , v3={v3} , heuristic={(1 / 3) * (v1 + v2 + v3)}')
-        return (1 / 3) * (v1 + v2 + v3)
+        return (1 / 6) * (v1 + v2 + v3) + (1/2) * v4
 
     def goal_f(self):
         if self.state.state_options(self.pos) == 0:
@@ -246,3 +268,11 @@ class Player(AbstractPlayer):
                 if cond(self.state.board[i][j]):
                     ret.append((i, j))
         return ret
+
+    def print_board(self, state):
+        board_to_print = np.flipud(state.board)
+        print('_' * len(board_to_print[0]) * 4)
+        for row in board_to_print:
+            row = [str(int(x)) if x != -1 else 'X' for x in row]
+            print(' | '.join(row))
+            print('_' * len(row) * 4)
