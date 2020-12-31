@@ -72,9 +72,9 @@ class State:
         # return max_fruit+self.scores[0 if not self.maximizing_player else 1]-self.scores[0 if self.maximizing_player else 1]-(1/md_other_player)+stateScore+self.NR_reachable_blocks(False)-self.NR_reachable_blocks(True)+self.turn_counter
 
     #TODO: calc rechable in nXn square, not all board
-    def NR_reachable_blocks(self, rival): # rival=False- calcs for me. rival=True calcs for him
-        pos = self.get_pos() if not rival else self.get_rival_pos()
-        work_board = copy.deepcopy(self.board)
+    def reachable_white_cells(self, opponent): # rival=False- calcs for me. rival=True calcs for him
+        pos = self.get_pos() if not opponent else self.get_opponent_pos()
+        board_cpy = np.copy.deepcopy(self.board)
         arr = [pos]
         count = -1
         while len(arr) > 0:
@@ -84,9 +84,9 @@ class State:
                 i = temp_pos[0] + d[0]
                 j = temp_pos[1] + d[1]
                 # check legal move
-                if 0 <= i < len(work_board) and 0 <= j < len(work_board[0]) and (work_board[i][j] not in [-1, 1, 2]):
+                if 0 <= i < len(board_cpy) and 0 <= j < len(board_cpy[0]) and (board_cpy[i][j] not in [-1, 1, 2]):
                     if pos[0]-50 <= i <= pos[0]+50 and pos[1]-50 <= j <= pos[1]+50: #TODO we added this line to limit the calc weight
-                        work_board[i,j] = -1
+                        board_cpy[i,j] = -1
                         arr.append((i,j))
         return count
 
