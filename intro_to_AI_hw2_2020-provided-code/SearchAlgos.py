@@ -31,41 +31,45 @@ class MiniMax(SearchAlgos):
 
     def search(self, state, depth, maximizing_player, players_score, start_time, time_limit):
         """Start the MiniMax algorithm.
+        :param time_limit: The limit of the time allowed to use for searching
+        :param start_time: The time we started the searching
+        :param players_score: The score of the players
         :param state: The state to start from.
         :param depth: The maximum allowed depth for the algorithm.
         :param maximizing_player: Whether this is a max node (True) or a min node (False).
         :return: A tuple: (The min max algorithm value, The direction in case of max node or None in min mode)
         """
         if self.goal(state):
-            return [self.utility(state, players_score, maximizing_player), None]
+            return self.utility(state, players_score, maximizing_player), None
         if depth == 0:
-            return [self.h(state, players_score), None]
+            return self.h(state, players_score), None
         direction = None
         if maximizing_player:
             max_val = float('-inf')
             for op in self.succ(state):
-                prev_val = state
-                new_state = self.perform_move(op, True)
+                prev_val = state.board[state.get_pos()]
+                new_state = self.perform_move(op, True, prev_val, players_score)
                 res = self.search(new_state, depth - 1, not maximizing_player)
                 if res[0] > max_val:
                     direction = op
                     max_val = res[0]
-                self.perform_move(op, False)
+                self.perform_move(op, False, prev_val, players_score)
                 if time.time() - start_time > time_limit:
-                    return max_val, direction, True
-            return max_val, direction, False
+                    return -1, "Interrupted"
+            return max_val, direction
         else:
             min_val = float('inf')
             for op in self.succ(state):
-                new_state = self.perform_move(op, True)
+                prev_val = state.board[state.get_pos()]
+                new_state = self.perform_move(op, True, prev_val, players_score)
                 res = self.search(new_state, depth - 1, not maximizing_player)
                 if res[0] < min_val:
                     direction = op
                     min_val = res[0]
-                self.perform_move(op, False)
+                self.perform_move(op, False, prev_val, players_score)
                 if time.time() - start_time > time_limit:
-                    return min_val, direction, True
-            return min_val, direction, False
+                    return -1, "Interrupted"
+            return min_val, direction
 
 
 class AlphaBeta(SearchAlgos):

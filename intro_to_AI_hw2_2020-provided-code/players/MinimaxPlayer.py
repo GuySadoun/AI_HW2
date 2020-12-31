@@ -15,12 +15,12 @@ from players.AbstractPlayer import AbstractPlayer
 
 
 class State:
-    def _init_(self, board, players_score, turn_number, maximizing_player):
+    def __init__(self, board, players_score, player_number):
         self.board = board
         self.players_score = players_score
-        self.turn_number = turn_number
+        self.player_number = player_number
         # self.penalty_score = penalty_score
-        self.maximizing_player = maximizing_player
+        # self.maximizing_player = maximizing_player
         # self.time = time
         # self.time_limit = time_limit
 
@@ -43,7 +43,7 @@ class State:
     # rival_pos = np.where(self.board == 2)
     # rival_pos = tuple(ax[0] for ax in rival_pos)
     # max_fruit = 0
-    # if self.turn_number <= min(self.board.shape[0], self.board.shape[1]):
+    # if self.player_number <= min(self.board.shape[0], self.board.shape[1]):
     #     for x in range(self.board.shape[0]):
     #         for y in range(self.board.shape[1]):
     #             if self.board[x, y] > 2:
@@ -98,11 +98,11 @@ class State:
         opponent_pos = np.where(self.board == 2)
         return tuple(ax[0] for ax in opponent_pos)
 
-    def get_turn_number(self):
-        return self.turn_number
+    def get_player_number(self):
+        return self.player_number
 
-    def get_maximizing_player(self):
-        return self.maximizing_player
+    # def get_maximizing_player(self):
+    #     return self.maximizing_player
 
     # def get_time_limit(self):
     #     return self.time_limit
@@ -135,9 +135,9 @@ class Player(AbstractPlayer):
         pos = np.where(board == 1)
         # convert pos to tuple of ints
         self.pos = tuple(ax[0] for ax in pos)
-        players_score_init = [0, 0]
-        self.state = State(board, players_score_init, 1, player_num)
-        # TODO: maybe need to change turn_number to 0?
+        players_score_init = (0, 0)
+        self.state = State(board, players_score_init, 1)
+        # TODO: maybe need to change player_number to 0?
 
     def make_move(self, time_limit, players_score):
         """Make move with this Player.
@@ -147,19 +147,19 @@ class Player(AbstractPlayer):
             - direction: tuple, specifing the Player's movement, chosen from self.directions
         """
         start_time = time.time()
-        minimax = MiniMax(self.utility_f, self.succ_f(), self.perform_move_f, self.state.players_score,
-                          heuristic_f=self.heuristic_f)
+        minimax = MiniMax(self.utility_f, self.succ_f, self.perform_move_f, self.state.players_score,
+                          goal=self.goal_f, heuristic_f=self.heuristic_f)
 
-        maximizing_player = 1  # TODO: calculate according to turn_number?
+        maximizing_player = 1  # TODO: calculate according to player_number?
         depth = 1
         # time_limits = [start_time, time_limit]
-        val, move, interrupted = minimax.search(self.state, depth, self.state.maximizing_player,
+        val, move, interrupted = minimax.search(self.state, depth, True,
                                                 self.state.players_score, start_time, time_limit)
         while True:
             depth += 1
-            val, result, interrupted = minimax.search(self.state, depth, self.state.maximizing_player,
+            val, result, direction = minimax.search(self.state, depth, True,
                                                       self.state.players_score, start_time, time_limit)
-            if interrupted:
+            if direction == "Interrupted":
                 return move
             else:
                 move = result
@@ -179,7 +179,7 @@ class Player(AbstractPlayer):
         No output is expected
         """
         # erase the following line and implement this function.
-        self.board[pos] = -1
+        self.state.board[pos] = -1
         # TODO: maybe need to change
 
     def update_fruits(self, fruits_on_board_dict):
@@ -191,13 +191,13 @@ class Player(AbstractPlayer):
         No output is expected.
         """
         # erase the following line and implement this function. In case you choose not to use it, use 'pass' instead of the following line.
-        current_fruits_pos = np.where(self.board > 2)
+        current_fruits_pos = np.where(self.state.board > 2)
         for fruit_pos in current_fruits_pos[0]:
-            self.board[fruit_pos] = 0
+            self.state.board[fruit_pos] = 0
         # if len(current_fruits_positions[0]) == 0:
         #     return
         for fruit_tuple in fruits_on_board_dict:
-            self.board[fruit_tuple[0]] = fruit_tuple[1]
+            self.state.board[fruit_tuple[0]] = fruit_tuple[1]
 
     ########## helper functions in class ##########
     # TODO: add here helper functions in class, if needed
@@ -220,29 +220,30 @@ class Player(AbstractPlayer):
         # return diff - state.penalty_score if maximizing_player else diff + state.penalty_score
 
     # returns possible directions to move
-    def succ_f(self):
+    def succ_f(self, state):
+        pos = np.where(state.board == state.player_number)
         for d in self.directions:
             i = self.pos[0] + d[0]
             j = self.pos[1] + d[1]
 
-            if 0 <= i < len(self.board) and 0 <= j < len(self.board[0]) and \
-                    (self.board[i][j] not in [-1, 1, 2]):  # then move is legal
+            if 0 <= i < len(state.board) and 0 <= j < len(state.board[0]) and \
+                    (state.board[i][j] not in [-1, 1, 2]):  # then move is legal
                 yield d[0], d[1]
 
     # gets an op and moves the player accroding to this op, prev_val will be passed before recursic call
     def perform_move_f(self, op, is_not_reversed, prev_val, players_score):
-        player_number = self.board[self.pos[0], self.pos[1]]
+        player_number = self.state.board[self.pos[0], self.pos[1]]
 
         if is_not_reversed:
-            self.board[self.pos[0], self.pos[1]] = -1
+            self.state.board[self.pos[0], self.pos[1]] = -1
             self.pos = (self.pos[0] + op[0], self.pos[1] + op[1])
-            players_score[player_number - 1] += prev_val
+            players_score[int(player_number - 1)] += int(prev_val)
         else:
-            self.board[self.pos[0], self.pos[1]] = prev_val
-            players_score[player_number - 1] -= prev_val
+            self.state.board[self.pos[0], self.pos[1]] = int(prev_val)
+            players_score[int(player_number - 1)] -= int(prev_val)
             self.pos = (self.pos[0] - op[0], self.pos[1] - op[1])
 
-        self.board[self.pos[0], self.pos[1]] = player_number
+        self.state.board[self.pos[0], self.pos[1]] = player_number
 
     def heuristic_f(self):
         closest = float('inf')
@@ -251,11 +252,16 @@ class Player(AbstractPlayer):
             md_dist = abs(self.pos[0] - fruit[0]) + abs(self.pos[1] - fruit[1])
             if md_dist < closest:
                 closest = md_dist
-                closest_val = self.board[fruit]
+                closest_val = self.state.board[fruit]
         v1 = closest_val / 300 if closest_val != -1 else 0
         opp_pos = np.where(self.state.board == 2)
         option_for_op = self.state.state_options(self.state.board, opp_pos)
         v2 = 1 / option_for_op if option_for_op > 0 else 1
         option_for_me = self.state.state_options(self.state.board, self.pos)
         v3 = (1 / 3) * option_for_me
-        return 1/3*(v1 + v2 + v3)
+        return (1 / 3) * (v1 + v2 + v3)
+
+    def goal_f(self, state):
+        if state.state_options(self.state.board, self.pos) == 0:
+            return True
+        return False
