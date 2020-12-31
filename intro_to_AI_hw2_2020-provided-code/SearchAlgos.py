@@ -44,31 +44,36 @@ class MiniMax(SearchAlgos):
         if depth == 0:
             return self.h(), None
         direction = None
+        prev_val = state.board[state.get_pos()]
         if maximizing_player:
-            max_val = float('-inf')
+            max_val = float('-inf') # infinity
             for op in self.succ(state):
                 prev_val = state.board[state.get_pos()]
                 new_state = self.perform_move(op, True, prev_val, players_score)
                 res = self.search(new_state, depth - 1, not maximizing_player, players_score, start_time, time_limit)
+                if res[1] == 'Interrupted':
+                    return res
                 if res[0] > max_val:
                     direction = op
                     max_val = res[0]
-                self.perform_move(op, False, prev_val, players_score)
+                self.perform_move(op, False, prev_val, players_score) # reversed operator
                 if time.time() - start_time > time_limit:
-                    return -1, "Interrupted"
+                    return max_val, 'Interrupted'
             return max_val, direction
         else:
-            min_val = float('inf')
+            min_val = float('inf') # minus infinity
             for op in self.succ(state):
                 prev_val = state.board[state.get_pos()]
                 new_state = self.perform_move(op, True, prev_val, players_score)
                 res = self.search(new_state, depth - 1, not maximizing_player, players_score, start_time, time_limit)
+                if res[1] == 'Interrupted':
+                    return res
                 if res[0] < min_val:
                     direction = op
                     min_val = res[0]
-                self.perform_move(op, False, prev_val, players_score)
+                self.perform_move(op, False, prev_val, players_score) # reversed operator
                 if time.time() - start_time > time_limit:
-                    return -1, "Interrupted"
+                    return min_val, 'Interrupted'
             return min_val, direction
 
 
