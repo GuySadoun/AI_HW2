@@ -72,22 +72,30 @@ class State:
         # return max_fruit+self.scores[0 if not self.maximizing_player else 1]-self.scores[0 if self.maximizing_player else 1]-(1/md_other_player)+stateScore+self.NR_reachable_blocks(False)-self.NR_reachable_blocks(True)+self.turn_counter
 
     #TODO: calc rechable in nXn square, not all board
-    def reachable_white_cells(self, opponent): # rival=False- calcs for me. rival=True calcs for him
-        pos = self.get_pos() if not opponent else self.get_opponent_pos()
-        board_cpy = np.copy.deepcopy(self.board)
-        arr = [pos]
-        count = -1
-        while len(arr) > 0:
-            count += 1
-            temp_pos=arr.pop()
+    def reachable_white_cells(self, player_number):
+        if player_number == 1:
+            pos = self.get_pos()
+        else:
+            assert player_number==2
+            pos = self.get_opponent_pos()
+
+        board_copy = np.copy.deepcopy(self.board)
+        reachable = [pos]
+        count = 0
+        while len(reachable) > 0:
+            curr_pos = reachable.pop()
             for d in utils.get_directions():
-                i = temp_pos[0] + d[0]
-                j = temp_pos[1] + d[1]
-                # check legal move
-                if 0 <= i < len(board_cpy) and 0 <= j < len(board_cpy[0]) and (board_cpy[i][j] not in [-1, 1, 2]):
-                    if pos[0]-50 <= i <= pos[0]+50 and pos[1]-50 <= j <= pos[1]+50: #TODO we added this line to limit the calc weight
-                        board_cpy[i,j] = -1
-                        arr.append((i,j))
+                i = curr_pos[0] + d[0]
+                j = curr_pos[1] + d[1]
+
+                if 0 <= i < len(board_copy) and 0 <= j < len(board_copy[0]) and (board_copy[i][j] not in [-1, 1, 2]):
+                        board_copy[i,j] = -1
+                        reachable.append((i,j))
+                        count += 1
+                        # we limit the amount of white cells we want to check because far white cells are less relevant for us,
+                        # since there is a high probability that they will be grey until we reach them
+                        if count > board_copy.size / 2:
+                            break
         return count
 
     def get_board(self):
@@ -119,7 +127,7 @@ class Player(AbstractPlayer):
     def __init__(self, game_time, penalty_score):
         # keep the inheritance of the parent's (AbstractPlayer) __init__()
         AbstractPlayer.__init__(self, game_time, penalty_score)
-        #TODO: initialize more fields, if needed, and the Minimax algorithm from SearchAlgos.py
+        # initialize more fields, if needed, and the Minimax algorithm from SearchAlgos.py
         self.board = None
         self.pos = None
 
@@ -132,7 +140,7 @@ class Player(AbstractPlayer):
             - board: np.array, a 2D matrix of the board.
         No output is expected.
         """
-        #TODO: erase the following line and implement this function.
+        #erase the following line and implement this function.
         self.board = board
         pos = np.where(board == 1)
         # convert pos to tuple of ints
@@ -156,8 +164,9 @@ class Player(AbstractPlayer):
             - pos: tuple, the new position of the rival.
         No output is expected
         """
-        #TODO: erase the following line and implement this function.
-        raise NotImplementedError
+        # erase the following line and implement this function.
+        self.board[pos] = -1
+        #TODO: maybe need to change
 
 
     def update_fruits(self, fruits_on_board_dict):
@@ -168,8 +177,14 @@ class Player(AbstractPlayer):
                                     'value' is the value of this fruit.
         No output is expected.
         """
-        #TODO: erase the following line and implement this function. In case you choose not to use it, use 'pass' instead of the following line.
-        raise NotImplementedError
+        # erase the following line and implement this function. In case you choose not to use it, use 'pass' instead of the following line.
+        current_fruits_pos = np.where(self.board > 2)
+        for fruit_pos in current_fruits_pos[0]:
+            self.board[fruit_pos] = 0
+        # if len(current_fruits_positions[0]) == 0:
+        #     return
+        for fruit_tuple in fruits_on_board_dict:
+            self.board[fruit_tuple[0]] = fruit_tuple[1]
 
 
     ########## helper functions in class ##########
