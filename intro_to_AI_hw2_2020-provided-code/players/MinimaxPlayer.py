@@ -24,12 +24,12 @@ class State:
         # self.time = time
         # self.time_limit = time_limit
 
-    def state_options(self, board, pos):
+    def state_options(self, pos):
         num_ops_available = 0
         for d in utils.get_directions():
             i = pos[0] + d[0]
             j = pos[1] + d[1]
-            if 0 <= i < len(board) and 0 <= j < len(board[0]) and (board[i][j] not in [-1, 1, 2]):
+            if 0 <= i < len(self.board) and 0 <= j < len(self.board[0]) and (self.board[i][j] not in [-1, 1, 2]):
                 num_ops_available += 1
         return num_ops_available
 
@@ -128,16 +128,18 @@ class Player(AbstractPlayer):
         maximizing_player = 1  # TODO: calculate according to player_number?
         depth = 1
         # time_limits = [start_time, time_limit]
-        val, move = minimax.search(self.state, depth, True,
-                                                self.state.players_score, start_time, time_limit)
-        while True:
-            depth += 1
-            val, result = minimax.search(self.state, depth, True,
-                                                      self.state.players_score, start_time, time_limit)
-            if result == "Interrupted":
-                return move
-            else:
-                move = result
+        val, move = minimax.search(self.state, 5, True,
+                                   self.state.players_score, start_time, time_limit)
+        print(f'move is: {move}')
+        return move
+        # while True:
+        #     depth += 1
+        #     val, result = minimax.search(self.state, depth, True,
+        #                                  self.state.players_score, start_time, time_limit)
+        #     if result == "Interrupted":
+        #         return move
+        #     else:
+        #         move = result
 
         # end_time = time.time()
         # if end_time - start_time > time_limit:
@@ -166,11 +168,7 @@ class Player(AbstractPlayer):
         No output is expected.
         """
         # erase the following line and implement this function. In case you choose not to use it, use 'pass' instead of the following line.
-        current_fruits_pos = []
-        for i in range(len(self.state.board)):
-            for j in range(len(self.state.board[0])):
-                if self.state.board[i][j] > 2:
-                    current_fruits_pos.append((i, j))
+        current_fruits_pos = self.get_indexs_by_cond(lambda x: x > 2)
         for fruit_pos in current_fruits_pos:
             self.state.board[fruit_pos] = 0
         # if len(current_fruits_positions[0]) == 0:
@@ -193,7 +191,7 @@ class Player(AbstractPlayer):
 
     # returns possible directions to move
     def succ_f(self, state):
-        pos = np.where(state.board == state.player_number)
+        pos = self.get_indexs_by_cond(lambda x: x == state.player_number)[0]
         for d in self.directions:
             i = pos[0] + d[0]
             j = pos[1] + d[1]
@@ -210,31 +208,41 @@ class Player(AbstractPlayer):
         if is_not_reversed:
             self.state.board[self.pos[0], self.pos[1]] = -1
             self.pos = (self.pos[0] + op[0], self.pos[1] + op[1])
-            players_score[player_number - 1] += prev_val
+            players_score[int(player_number) - 1] += prev_val
         else:
             self.state.board[self.pos[0], self.pos[1]] = prev_val
-            players_score[player_number - 1] -= prev_val
+            players_score[int(player_number) - 1] -= prev_val
             self.pos = (self.pos[0] - op[0], self.pos[1] - op[1])
 
         self.state.board[self.pos[0], self.pos[1]] = player_number
+        return self.state
 
-    def heuristic_f(self):
+    def heuristic_f(self, state):
         closest = float('inf')
         closest_val = -1
-        for fruit in np.where(self.state.board > 2):
+        for fruit in self.get_indexs_by_cond(lambda x: x > 2):
             md_dist = abs(self.pos[0] - fruit[0]) + abs(self.pos[1] - fruit[1])
             if md_dist < closest:
                 closest = md_dist
-                closest_val = self.state.board[fruit]
-        v1 = closest_val / 300 if closest_val != -1 else 0
-        opp_pos = np.where(self.state.board == 2)
-        option_for_op = self.state.state_options(self.state.board, opp_pos)
+                closest_val = state.board[fruit]
+        v1 = (closest_val / 300) if closest_val != -1 else 0
+        opp_pos = self.get_indexs_by_cond(lambda x: x == 2)[0]
+        option_for_op = state.state_options(opp_pos)
         v2 = 1 / option_for_op if option_for_op > 0 else 1
-        option_for_me = self.state.state_options(self.state.board, self.pos)
+        option_for_me = state.state_options(self.pos)
         v3 = (1 / 3) * option_for_me
+        print(f'v1={v1} , v2={v2} , v3={v3} , heuristic={(1 / 3) * (v1 + v2 + v3)}')
         return (1 / 3) * (v1 + v2 + v3)
 
     def goal_f(self):
-        if self.state.state_options(self.state.board, self.pos) == 0:
+        if self.state.state_options(self.pos) == 0:
             return True
         return False
+
+    def get_indexs_by_cond(self, cond):
+        ret = []
+        for i in range(len(self.state.board)):
+            for j in range(len(self.state.board[0])):
+                if cond(self.state.board[i][j]):
+                    ret.append((i, j))
+        return ret
