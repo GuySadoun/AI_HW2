@@ -9,7 +9,9 @@ import utils
 from Game import Game
 from SearchAlgos import MiniMax
 from players.AbstractPlayer import AbstractPlayer
-#TODO: you can import more modules, if needed
+
+
+# TODO: you can import more modules, if needed
 
 
 class State:
@@ -19,8 +21,8 @@ class State:
         self.turn_number = turn_number
         # self.penalty_score = penalty_score
         self.maximizing_player = maximizing_player
-        #self.time = time
-        #self.time_limit = time_limit
+        # self.time = time
+        # self.time_limit = time_limit
 
     def state_options(self, board, pos):
         num_ops_available = 0
@@ -35,33 +37,32 @@ class State:
         # else:
         #     return 4 - num_ops_available
 
-    def heuristic_value(self):
-        # pos = np.where(self.board == 1)
-        # pos = tuple(ax[0] for ax in pos)
-        # rival_pos = np.where(self.board == 2)
-        # rival_pos = tuple(ax[0] for ax in rival_pos)
-        # max_fruit = 0
-        # if self.turn_number <= min(self.board.shape[0], self.board.shape[1]):
-        #     for x in range(self.board.shape[0]):
-        #         for y in range(self.board.shape[1]):
-        #             if self.board[x, y] > 2:
-        #                 if not self.maximizing_player:#my turn, its my succ state
-        #                     md_fruit = abs(x - pos[0]) + abs(y - pos[1])
-        #                 else:
-        #                     md_fruit = abs(x - rival_pos[0]) + abs(y - rival_pos[1])
-        #                 temp = self.board[x,y] / md_fruit
-        #                 if temp > max_fruit and md_fruit < min(self.board.shape[0],self.board.shape[1])/2:
-        #                     max_fruit = temp
-        # md_other_player = abs(pos[0]-rival_pos[0])+abs(pos[1]-rival_pos[1])
-        # stateScore=self.state_options(self.board, pos) if not self.maximizing_player else self.state_options(self.board, rival_pos)
-        # return max_fruit+self.scores[0 if not self.maximizing_player else 1]-self.scores[0 if self.maximizing_player else 1]-(1/md_other_player)+stateScore+self.NR_reachable_blocks(False)-self.NR_reachable_blocks(True)+self.turn_counter
+    # def heuristic_value(self):
+    # pos = np.where(self.board == 1)
+    # pos = tuple(ax[0] for ax in pos)
+    # rival_pos = np.where(self.board == 2)
+    # rival_pos = tuple(ax[0] for ax in rival_pos)
+    # max_fruit = 0
+    # if self.turn_number <= min(self.board.shape[0], self.board.shape[1]):
+    #     for x in range(self.board.shape[0]):
+    #         for y in range(self.board.shape[1]):
+    #             if self.board[x, y] > 2:
+    #                 if not self.maximizing_player:#my turn, its my succ state
+    #                     md_fruit = abs(x - pos[0]) + abs(y - pos[1])
+    #                 else:
+    #                     md_fruit = abs(x - rival_pos[0]) + abs(y - rival_pos[1])
+    #                 temp = self.board[x,y] / md_fruit
+    #                 if temp > max_fruit and md_fruit < min(self.board.shape[0],self.board.shape[1])/2:
+    #                     max_fruit = temp
+    # md_other_player = abs(pos[0]-rival_pos[0])+abs(pos[1]-rival_pos[1])
+    # stateScore=self.state_options(self.board, pos) if not self.maximizing_player else self.state_options(self.board, rival_pos)
+    # return max_fruit+self.scores[0 if not self.maximizing_player else 1]-self.scores[0 if self.maximizing_player else 1]-(1/md_other_player)+stateScore+self.NR_reachable_blocks(False)-self.NR_reachable_blocks(True)+self.turn_counter
 
-    #TODO: calc rechable in nXn square, not all board
     def reachable_white_cells(self, player_number):
         if player_number == 1:
             pos = self.get_pos()
         else:
-            assert player_number==2
+            assert player_number == 2
             pos = self.get_opponent_pos()
 
         board_copy = np.copy.deepcopy(self.board)
@@ -74,13 +75,13 @@ class State:
                 j = curr_pos[1] + d[1]
 
                 if 0 <= i < len(board_copy) and 0 <= j < len(board_copy[0]) and (board_copy[i][j] not in [-1, 1, 2]):
-                        board_copy[i,j] = -1
-                        reachable.append((i,j))
-                        count += 1
-                        # we limit the amount of white cells we want to check because far white cells are less relevant for us,
-                        # since there is a high probability that they will be grey until we reach them
-                        if count > board_copy.size / 2:
-                            break
+                    board_copy[i, j] = -1
+                    reachable.append((i, j))
+                    count += 1
+                    # limit the amount of white cells we want to check because far white cells are less relevant for us,
+                    # since there is a high probability that they will be grey until we reach them
+                    if count > board_copy.size / 2:
+                        break
         return count
 
     def get_board(self):
@@ -108,7 +109,8 @@ class State:
 
     # def get_time(self):`
     #     return self.time
-    #TODO: Delete comments from state class
+    # TODO: Delete comments from state class
+
 
 class Player(AbstractPlayer):
 
@@ -128,12 +130,12 @@ class Player(AbstractPlayer):
             - board: np.array, a 2D matrix of the board.
         No output is expected.
         """
-        #erase the following line and implement this function.
+        # erase the following line and implement this function.
         # self.board = board
         pos = np.where(board == 1)
         # convert pos to tuple of ints
         self.pos = tuple(ax[0] for ax in pos)
-        players_score_init = [0,0]
+        players_score_init = [0, 0]
         self.state = State(board, players_score_init, 1, player_num)
         # TODO: maybe need to change turn_number to 0?
 
@@ -145,17 +147,18 @@ class Player(AbstractPlayer):
             - direction: tuple, specifing the Player's movement, chosen from self.directions
         """
         start_time = time.time()
-        minimax = MiniMax(self.utility_f, self.succ_f(), self.perform_move_f, self.state.players_score, heuristic_f=self.heuristic_f)
+        minimax = MiniMax(self.utility_f, self.succ_f(), self.perform_move_f, self.state.players_score,
+                          heuristic_f=self.heuristic_f)
 
-        maximizing_player = 1 #TODO: calculate according to turn_number?
+        maximizing_player = 1  # TODO: calculate according to turn_number?
         depth = 1
         # time_limits = [start_time, time_limit]
         val, move, interrupted = minimax.search(self.state, depth, self.state.maximizing_player,
                                                 self.state.players_score, start_time, time_limit)
         while True:
-            depth+=1
+            depth += 1
             val, result, interrupted = minimax.search(self.state, depth, self.state.maximizing_player,
-                                                         self.state.players_score, start_time, time_limit)
+                                                      self.state.players_score, start_time, time_limit)
             if interrupted:
                 return move
             else:
@@ -169,7 +172,6 @@ class Player(AbstractPlayer):
 
         ### making move as writen in val[1] ###
 
-
     def set_rival_move(self, pos):
         """Update your info, given the new position of the rival.
         input:
@@ -178,8 +180,7 @@ class Player(AbstractPlayer):
         """
         # erase the following line and implement this function.
         self.board[pos] = -1
-        #TODO: maybe need to change
-
+        # TODO: maybe need to change
 
     def update_fruits(self, fruits_on_board_dict):
         """Update your info on the current fruits on board (if needed).
@@ -198,13 +199,11 @@ class Player(AbstractPlayer):
         for fruit_tuple in fruits_on_board_dict:
             self.board[fruit_tuple[0]] = fruit_tuple[1]
 
-
     ########## helper functions in class ##########
-    #TODO: add here helper functions in class, if needed
-
+    # TODO: add here helper functions in class, if needed
 
     ########## helper functions for MiniMax algorithm ##########
-    #TODO: add here the utility, succ, and perform_move functions used in MiniMax algorithm
+    # TODO: add here the utility, succ, and perform_move functions used in MiniMax algorithm
     def utility_f(self, players_score):
         if players_score[0] - players_score[1] > 0:
             return 1
@@ -220,8 +219,7 @@ class Player(AbstractPlayer):
         # # return diff between scores, only 1 stuck
         # return diff - state.penalty_score if maximizing_player else diff + state.penalty_score
 
-
-    #returns possible directions to move
+    # returns possible directions to move
     def succ_f(self):
         for d in self.directions:
             i = self.pos[0] + d[0]
@@ -231,7 +229,7 @@ class Player(AbstractPlayer):
                     (self.board[i][j] not in [-1, 1, 2]):  # then move is legal
                 yield d[0], d[1]
 
-    #gets an op and moves the player accroding to this op, prev_val will be passed before recursic call
+    # gets an op and moves the player accroding to this op, prev_val will be passed before recursic call
     def perform_move_f(self, op, is_not_reversed, prev_val, players_score):
         player_number = self.board[self.pos[0], self.pos[1]]
 
@@ -246,6 +244,18 @@ class Player(AbstractPlayer):
 
         self.board[self.pos[0], self.pos[1]] = player_number
 
-    def heuristic_f(self, ):
-        pass
-
+    def heuristic_f(self):
+        closest = float('inf')
+        closest_val = -1
+        for fruit in np.where(self.state.board > 2):
+            md_dist = abs(self.pos[0] - fruit[0]) + abs(self.pos[1] - fruit[1])
+            if md_dist < closest:
+                closest = md_dist
+                closest_val = self.board[fruit]
+        v1 = closest_val / 300 if closest_val != -1 else 0
+        opp_pos = np.where(self.state.board == 2)
+        option_for_op = self.state.state_options(self.state.board, opp_pos)
+        v2 = 1 / option_for_op if option_for_op > 0 else 1
+        option_for_me = self.state.state_options(self.state.board, self.pos)
+        v3 = (1 / 3) * option_for_me
+        return 1/3*(v1 + v2 + v3)
