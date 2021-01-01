@@ -106,7 +106,7 @@ class GameWrapper:
         prev_pos = self.game.get_player_position(player_index)
         print(f'player {player_index} is at pos', prev_pos)
         pos = (prev_pos[0] + move[0], prev_pos[1] + move[1])
-        print(f'Player {player_index}', player_index + 1, 'moved to', pos)
+        print(f'Player {player_index} moved to', pos)
         assert self.game.check_move(pos), 'illegal move'
         self.players[1 - player_index].set_rival_move(pos)
 

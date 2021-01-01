@@ -3,8 +3,6 @@
 import time
 
 from utils import ALPHA_VALUE_INIT, BETA_VALUE_INIT
-
-
 # TODO: you can import more modules, if needed
 
 
@@ -41,55 +39,44 @@ class MiniMax(SearchAlgos):
         :param maximizing_player: Whether this is a max node (True) or a min node (False).
         :return: A tuple: (The min max algorithm value, The direction in case of max node or None in min mode)
         """
-        print(f'maximizing_player is {maximizing_player}')
-        if self.goal():
-            print(f'##search - res0 = {(self.utility(players_score), None)}')
-            return self.utility(players_score), None
+        pos = state.get_pos() if maximizing_player else state.get_opponent_pos()
+        if self.goal(state, pos, players_score):
+            return self.utility(players_score, maximizing_player)
         if depth == 0:
-            print(f'##search - res1 = {(self.h(state), None)}')
-            return self.h(state), None
-        direction = None
+            val = self.h(state, pos)
+            return val
         if maximizing_player:
-            max_val = float('-inf')  # infinity
-            curr_idx = state.get_pos()
-            print(f'##search - curr_idx = {curr_idx}')
-            for op in self.succ(state, curr_idx):
-                next_cell = (curr_idx[0] + op[0], curr_idx[1] + op[1])
+            curr_max = float('-inf')  # minus infinity
+            for op in self.succ(state, pos):
+                next_cell = (pos[0] + op[0], pos[1] + op[1])
                 prev_val = state.board[next_cell]
-                new_state = self.perform_move(op, True, prev_val, players_score, False)
+                print(f'search - players_score[0] before: {players_score[0]}')
+                new_state = self.perform_move(state, op, pos, players_score)
                 res = self.search(new_state, depth - 1, not maximizing_player, players_score, start_time, time_limit)
-                if res[1] == 'Interrupted':
-                    self.perform_move(op, True, prev_val, players_score, False)  # reversed operator
-                    print(f'##search - res2 = {res}')
-                    return res
-                if res[0] > max_val:
-                    direction = op
-                    max_val = res[0]
-                self.perform_move(op, False, prev_val, players_score, False)  # reversed operator
+                if res == -2:
+                    return res  # Interrupted
+                if res > curr_max:
+                    curr_max = res
+                self.perform_move(state, op, next_cell, players_score, prev_val)  # reversed operator
+                print(f'search - players_score[0] after: {players_score[0]}')
                 if time.time() - start_time > time_limit:
-                    return max_val, 'Interrupted'
-            return max_val, direction
+                    return -2  # Interrupted
+            return curr_max
         else:
-            min_val = float('inf')  # minus infinity
-            curr_idx = state.get_opponent_pos()
-            print(f'##search - curr_idx = {curr_idx}')
-            for op in self.succ(state, curr_idx):
-                next_cell = (curr_idx[0] + op[0], curr_idx[1] + op[1])
+            curr_min = float('inf')  # infinity
+            for op in self.succ(state, pos):
+                next_cell = (pos[0] + op[0], pos[1] + op[1])
                 prev_val = state.board[next_cell]
-                new_state = self.perform_move(op, True, prev_val, players_score, True)
+                new_state = self.perform_move(state, op, pos, players_score)
                 res = self.search(new_state, depth - 1, not maximizing_player, players_score, start_time, time_limit)
-                if res[1] == 'Interrupted':
-                    self.perform_move(op, True, prev_val, players_score, True)  # reversed operator
-                    print(f'##search - res3 = {res}')
-                    return res
-                if res[0] < min_val:
-                    direction = op
-                    min_val = res[0]
-                self.perform_move(op, False, prev_val, players_score, True)  # reversed operator
+                if res == -2:
+                    return res  # Interrupted
+                if res < curr_min:
+                    curr_min = res
+                self.perform_move(state, op, next_cell, players_score, prev_val)  # reversed operator
                 if time.time() - start_time > time_limit:
-                    print(f'##search - res interrupted')
-                    return min_val, 'Interrupted'
-            return min_val, direction
+                    return -2  # Interrupted
+            return curr_min
 
 
 class AlphaBeta(SearchAlgos):
