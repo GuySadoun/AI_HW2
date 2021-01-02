@@ -62,8 +62,6 @@ class State:
                     count += 1
                     # limit the amount of white cells we want to check because far white cells are less relevant for us,
                     # since there is a high probability that they will be grey until we reach them
-                    if count > 36:
-                        break
         return count
 
     def is_players_connected(self):
@@ -200,7 +198,7 @@ class Player(AbstractPlayer):
                 prev_val = state_copy.board[new_pos]
                 assert prev_val not in [-1, -2, 1, 2]
                 self.perform_move_f(state_copy, op, self.pos)
-                res = minimax.search(state_copy, depth, True)
+                res = minimax.search(state_copy, depth, True, True)
                 if res == -2:
                     move = op if move is None else move
                     # update local board and pos

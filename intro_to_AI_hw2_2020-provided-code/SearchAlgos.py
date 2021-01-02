@@ -29,8 +29,9 @@ class SearchAlgos:
 
 class MiniMax(SearchAlgos):
 
-    def search(self, state, depth, maximizing_player):
+    def search(self, state, depth, maximizing_player, is_root=False):
         """Start the MiniMax algorithm.
+        :param is_root: is it first call
         :param players_score: The score of the players
         :param state: The state to start from.
         :param depth: The maximum allowed depth for the algorithm.
@@ -50,8 +51,10 @@ class MiniMax(SearchAlgos):
                 prev_val = state.board[next_cell]
                 new_state = self.perform_move(state, op, pos)
                 res = self.search(new_state, depth - 1, not maximizing_player)
-                if res == -2:
+                if res == -2 and not is_root:
                     return res  # Interrupted
+                elif is_root:
+                    return curr_max
                 if res > curr_max:
                     curr_max = res
                 self.perform_move(state, op, next_cell, prev_val)  # reversed operator
@@ -77,7 +80,7 @@ class MiniMax(SearchAlgos):
 
 class AlphaBeta(SearchAlgos):
 
-    def search(self, state, depth, maximizing_player, alpha=ALPHA_VALUE_INIT, beta=BETA_VALUE_INIT):
+    def search(self, state, depth, maximizing_player, alpha=ALPHA_VALUE_INIT, beta=BETA_VALUE_INIT, is_root=False):
         """Start the AlphaBeta algorithm.
         :param state: The state to start from.
         :param depth: The maximum allowed depth for the algorithm.
@@ -87,7 +90,7 @@ class AlphaBeta(SearchAlgos):
         :return: A tuple: (The min max algorithm value, The direction in case of max node or None in min mode)
         """
         pos = state.get_pos() if maximizing_player else state.get_opponent_pos()
-        if self.goal(state, pos, state.players_score):
+        if self.goal(state, pos):
             return self.utility(state.players_score, maximizing_player)
         if depth == 0:
             val = self.h(state, pos)
@@ -99,8 +102,10 @@ class AlphaBeta(SearchAlgos):
                 prev_val = state.board[next_cell]
                 new_state = self.perform_move(state, op, pos)
                 res = self.search(new_state, depth - 1, not maximizing_player)
-                if res == -2:
+                if res == -2 and not is_root:
                     return res  # Interrupted
+                elif is_root:
+                    return curr_max
                 if res > curr_max:
                     curr_max = res
                 self.perform_move(state, op, next_cell, prev_val)  # reversed operator
