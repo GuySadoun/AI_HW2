@@ -42,7 +42,7 @@ class State:
             assert player_number == 2
             pos = self.get_opponent_pos()
 
-        board_copy = np.copy.deepcopy(self.board)
+        board_copy = copy.deepcopy(self.board)
         reachable = [pos]
         count = 0
         while len(reachable) > 0:
@@ -155,14 +155,10 @@ class Player(AbstractPlayer):
 
         move = None
         minimax_val = float('-inf')
-        depth = 1
+        depth = 2
         children = self.succ_f(self.state, self.pos)
         tribal_point = 1
         if len(children) == 1:
-            # print(f'len(children) == 1 - move = {move}')
-            # print_board(self.state)
-            # print(f'{children}')
-            # print(f'{children[0]}')
             move = children[0]
             new_pos = (self.pos[0] + move[0], self.pos[1] + move[1])
             self.state.players_score[0] += self.state.board[new_pos]
@@ -176,19 +172,10 @@ class Player(AbstractPlayer):
                 new_pos = (self.pos[0] + op[0], self.pos[1] + op[1])
                 prev_val = state_copy.board[new_pos]
                 assert prev_val not in [-1, -2, 1, 2]
-                print('make_move - before:')
-                print(f'make_move - op avail: {children}')
-                print(f'make_move - check: {op}')
-                print(f'make_move - players_score: {state_copy.players_score}')
-                # print_board(state_copy)
                 self.perform_move_f(state_copy, op, self.pos, state_copy.players_score)
-                print('make_move - after:')
-                print(f'make_move - players_score: {state_copy.players_score}')
-                # print_board(state_copy)
                 res = minimax.search(state_copy, depth, True, state_copy.players_score, start_time, time_limit)
                 if res == -2:
                     # update local board and pos
-                    print(f'interupt - move = {move}')
                     new_pos = (self.pos[0] + move[0], self.pos[1] + move[1])
                     self.state.players_score[0] += self.state.board[new_pos]
                     self.state.board[self.pos] = -1
@@ -202,17 +189,17 @@ class Player(AbstractPlayer):
                 assert len(state_copy.get_indexs_by_cond(lambda x: x == 2)) == 1
                 assert len(state_copy.get_indexs_by_cond(lambda x: x == 1)) == 1
                 depth += 1
-            tribal_point = minimax_val / tribal_point
+            tribal_point = minimax_val / tribal_point if not np.math.isnan(minimax_val) and not np.math.isnan(
+                tribal_point) else 1
             if abs(tribal_point) - 1 < 0.01:
                 break
 
         # update local board and pos
-        new_pos = (self.pos[0] + move[0], self.pos[1] + move[1])
+        new_pos = (self.pos[0] + move[0], self.pos[1] + move[1]) if move is not None else self.pos
         self.state.players_score[0] += self.state.board[new_pos]
         self.state.board[self.pos] = -1
         self.state.board[new_pos] = 1
         self.pos = new_pos
-        print(f'make_move - finish - move = {move}')
         return move
 
     def set_rival_move(self, pos):
@@ -294,36 +281,53 @@ class Player(AbstractPlayer):
             players_score[int(player_id) - 1] -= prev_val
             last_pos = (pos[0] - op[0], pos[1] - op[1])
             state.board[last_pos] = player_id
-        print_board(state)
         assert len(state.get_indexs_by_cond(lambda x: x == 2)) == 1
         assert len(state.get_indexs_by_cond(lambda x: x == 1)) == 1
         return state
 
     def heuristic_f(self, state, pos):
-        print(f'heuristic_f - player score before: {state.players_score}')
+        print('***************************************************')
         closest = float('inf')
         closest_val = -1
-        for fruit in state.get_indexs_by_cond(lambda x: x > 2):
-            md_dist = abs(self.pos[0] - fruit[0]) + abs(self.pos[1] - fruit[1])
-            if md_dist < closest:
-                closest = md_dist
-                closest_val = state.board[fruit]
-        v1 = (1 / closest) * (closest_val / 300) if closest_val != -1 else 0
+        fruits = 0
+        difference = state.players_score[0] - state.players_score[1]
         player_id = state.board[pos]
         opponent_id = player_id % 2 + 1
-        indexes_set = state.get_indexs_by_cond(lambda x: x == opponent_id)
-        opp_pos = indexes_set[0]
-        assert len(indexes_set) == 1
+        opp_pos = state.get_indexs_by_cond(lambda x: x == opponent_id)[0]
         option_for_op = state.state_options(opp_pos)
-        v2 = 1 / option_for_op if option_for_op > 0 else 1
-        option_for_me = state.state_options(self.pos)
-        v3 = (1 / 3) * option_for_me
-        difference = state.players_score[0] - state.players_score[1]
-        v4 = difference / 150  # could be negative
-        # print(f'v1={v1} , v2={v2} , v3={v3} , v4 = {v4} , heuristic={(1 / 6) * (v1 + v2 + v3) + (1 / 2) * v4}')
-        ret_val = (1 / 6) * (v1 + v2 + v3) + (1 / 2) * v4
-        print(f'heuristic_f - player score after: {state.players_score}')
-        return ret_val
+        option_for_me = state.state_options(pos)
+        for fruit in state.get_indexs_by_cond(lambda x: x > 2):  # find closest fruit and who's closer to max fruit
+            fruits += 1
+            md_dist = abs(pos[0] - fruit[0]) + abs(pos[1] - fruit[1])
+            md_opp_dist = abs(opp_pos[0] - fruit[0]) + abs(opp_pos[1] - fruit[1])
+            if md_dist < closest and md_dist < md_opp_dist:
+                closest = md_dist
+                closest_val = state.board[fruit]
+                print(f'fruit at {fruit} far {closest} from {pos}')
+        if fruits == 0 and difference > -self.penalty_score:  # close your enemy strategy
+            print('EAT YOUR ENEMY!')
+            print(f'pos - {pos} opp_pos - {opp_pos}')
+            md_from_opp = abs(pos[0] - opp_pos[0]) + abs(pos[1] - opp_pos[1])
+            assert md_from_opp > 0
+            v1 = 1 / md_from_opp
+            v2 = self.state.reachable_white_cells(opponent_id) / 36
+            v3 = self.state.reachable_white_cells(player_id) / 36
+            v4 = (1 / option_for_op) if option_for_op > 0 else 1
+            v5 = (1 / 3) * option_for_me
+            h_val = (1 / 7) * (v1 + v2 + v3 + v4) + (3 / 7) * v5
+            print(f'heuristic_f - val: {h_val}')
+        else:
+            print('MAX SCORE!')
+            v1 = (1 / closest) * (closest_val / 300) if closest_val != -1 else 0
+            v2 = 1 / option_for_op if option_for_op > 0 else 1
+            option_for_me = state.state_options(self.pos)
+            v3 = (1 / 3) * option_for_me
+            v4 = difference / 300  # could be negative
+            h_val = (1 / 6) * (v1 + v2 + v3) + (1 / 2) * v4
+            print(f'heuristic_f - val 2: {h_val}')
+        print('***************************************************')
+        print('***************************************************')
+        return h_val
 
     def goal_f(self, state, pos, players_score):
         all_next_positions = [utils.tup_add(pos, direction) for direction in self.directions]

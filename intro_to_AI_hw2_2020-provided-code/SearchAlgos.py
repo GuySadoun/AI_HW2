@@ -50,7 +50,6 @@ class MiniMax(SearchAlgos):
             for op in self.succ(state, pos):
                 next_cell = (pos[0] + op[0], pos[1] + op[1])
                 prev_val = state.board[next_cell]
-                print(f'search - players_score[0] before: {players_score[0]}')
                 new_state = self.perform_move(state, op, pos, players_score)
                 res = self.search(new_state, depth - 1, not maximizing_player, players_score, start_time, time_limit)
                 if res == -2:
@@ -58,7 +57,6 @@ class MiniMax(SearchAlgos):
                 if res > curr_max:
                     curr_max = res
                 self.perform_move(state, op, next_cell, players_score, prev_val)  # reversed operator
-                print(f'search - players_score[0] after: {players_score[0]}')
                 if time.time() - start_time > time_limit:
                     return -2  # Interrupted
             return curr_max
