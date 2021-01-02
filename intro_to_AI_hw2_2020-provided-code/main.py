@@ -13,7 +13,7 @@ if __name__ == "__main__":
                         help='The type of the first player.',
                         choices=players_options)
     #SimplePlayer
-    parser.add_argument('-player2', default='AlphabetaPlayer',  type=str,
+    parser.add_argument('-player2', default='MinimaxPlayer',  type=str,
                         help='The type of the second player.',
                         choices=players_options)
     
