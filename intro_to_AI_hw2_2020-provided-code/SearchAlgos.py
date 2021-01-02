@@ -109,9 +109,7 @@ class AlphaBeta(SearchAlgos):
                 if curr_max >= beta:
                     return float('inf')
                 # end alpha beta adaption
-                # TODO: important! check time limit mechanism
-                if state.get_time_left() < 0.003:  # TODO: important!!!!!!! check time limit mechanism
-                    # TODO: important! check time limit mechanism
+                if state.get_time_left() < 0.7:
                     return -2  # Interrupted
             return curr_max
         else:
@@ -131,8 +129,6 @@ class AlphaBeta(SearchAlgos):
                 if curr_min <= alpha:
                     return float('inf')
                 # end alpha beta adaption
-                # TODO: important! check time limit mechanism
-                if state.get_time_left() < 0.003:  # TODO: important! check time limit mechanism
-                    # TODO: important! check time limit mechanism
+                if state.get_time_left() < 0.7:
                     return -2  # Interrupted
             return curr_min
