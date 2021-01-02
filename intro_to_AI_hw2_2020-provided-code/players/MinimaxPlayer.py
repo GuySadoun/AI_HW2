@@ -62,7 +62,7 @@ class State:
                     count += 1
                     # limit the amount of white cells we want to check because far white cells are less relevant for us,
                     # since there is a high probability that they will be grey until we reach them
-                    if count > board_copy.size:
+                    if count > 36:
                         break
         return count
 
@@ -114,8 +114,6 @@ class State:
     def get_time_left(self):
         time_passed = time.time() - self.start_time
         time_left = self.time_limit - time_passed
-        print(f'time passed = {time_passed}')
-        print(f'time left = {time_left}')
         return time_left
 
     def set_time_limit(self, time_limit):
@@ -317,57 +315,69 @@ class Player(AbstractPlayer):
 
     def heuristic_f(self, state, pos):
         print('***************************************************')
-        closest = float('inf')
-        closest_val = -1
-        fruits = 0
-        difference = state.players_score[0] - state.players_score[1]
+        difference_ratio = state.players_score[0] / state.players_score[1]
         player_id = state.board[pos]
         opponent_id = player_id % 2 + 1
         opp_pos = state.get_indexs_by_cond(lambda x: x == opponent_id)[0]
         option_for_op = state.state_options(opp_pos)
         option_for_me = state.state_options(pos)
-        is_opp_reachable = state.is_players_connected()
-        for fruit in state.get_indexs_by_cond(lambda x: x > 2):  # find closest fruit and who's closer to max fruit
+        is_opp_reachable_state = state.is_players_connected()
+        is_opp_reachable_game = self.state.is_players_connected()
+        closest_md_for_me = float('inf')
+        closest_md_for_opp = float('inf')
+        closest_val = -1
+        fruits = 0
+        if is_opp_reachable_game and not is_opp_reachable_state:
+            reachable_for_state_opp = state.reachable_white_cells(opponent_id)
+            if reachable_for_state_opp > 0:
+                reachable_for_state = state.reachable_white_cells(player_id)
+                return reachable_for_state / reachable_for_state_opp  # in some cases can assure victory
+
+        for fruit in self.state.get_indexs_by_cond(lambda x: x > 2):  # find closest fruit and who's closer to max fruit
             fruits += 1
             md_dist = abs(pos[0] - fruit[0]) + abs(pos[1] - fruit[1])
             md_opp_dist = abs(opp_pos[0] - fruit[0]) + abs(opp_pos[1] - fruit[1])
-            if md_dist < closest and md_dist < md_opp_dist:
-                closest = md_dist
+            if md_dist < closest_md_for_me:
+                closest_md_for_me = md_dist
                 closest_val = state.board[fruit]
-                print(f'fruit at {fruit} far {closest} from {pos}')
-        if fruits == 0 and difference > -self.penalty_score and is_opp_reachable:  # close your enemy strategy
-            print('EAT YOUR ENEMY!')
-            print(f'pos - {pos} opp_pos - {opp_pos}')
-            md_from_opp = abs(pos[0] - opp_pos[0]) + abs(pos[1] - opp_pos[1])
-            assert md_from_opp > 0
-            reachable = self.state.reachable_white_cells(opponent_id)
-            white_cells_on_board = self.state.white_cells_on_board()
-            v1 = 1 / md_from_opp
-            v2 = reachable / white_cells_on_board
-            v3 = white_cells_on_board / self.state.board.size
-            v4 = (1 / option_for_op) if option_for_op > 0 else 1
-            v5 = (1 / 3) * option_for_me
-            h_val = (2 / 10) * (v1 + v5) + (1 / 10) * (v2 + v3) + (4 / 10) * v4
-            print(f'heuristic_f - val: {h_val}')
-        elif fruits > 0:  # search fruit strategy
+            if md_opp_dist < closest_md_for_opp:
+                closest_md_for_opp = md_opp_dist
+        if fruits > 0 and closest_md_for_me < len(state.board[0]):  # search fruit strategy
             print('MAX SCORE!')
-            v1 = (1 / closest) * (closest_val / 300) if closest_val != -1 else 0
+            if closest_md_for_me == 0:
+                v1 = 1
+            else:
+                v1 = (1 / closest_md_for_me) * (closest_val / self.penalty_score)
             v2 = 1 / option_for_op if option_for_op > 0 else 1
-            option_for_me = state.state_options(self.pos)
-            v3 = (1 / 3) * option_for_me
-            v4 = difference / self.penalty_score if difference > 0 else v1  # if opp is winning give more weight to fruit
-            h_val = (1 / 6) * (v1 + v2 + v3) + (1 / 2) * v4
-            print(f'heuristic_f - val 2: {h_val}')
-        else:  # staying alive strategy - maximum h_val is 0.5
-            print('SURVIVE!')
-            reachable_for_me = self.state.reachable_white_cells(player_id)
-            reachable_for_opp = self.state.reachable_white_cells(opponent_id)
-            v1 = reachable_for_me / reachable_for_opp
-            h_val = (1 / 2) * v1
+            v3 = (1 / 4) * option_for_me
+            v4 = difference_ratio  # if opp is winning give more weight to fruit
+            v5 = closest_md_for_me / closest_md_for_opp
+            h_val = (1 / 7) * (v2 + v3 + v5) + (2 / 7) * (v1 + v4)
+        else:
+            reachable_for_state = state.reachable_white_cells(player_id)
+            if is_opp_reachable_state:  # close your enemy strategy
+                print('EAT YOUR ENEMY!')
+                md_from_opp = abs(pos[0] - opp_pos[0]) + abs(pos[1] - opp_pos[1])
+                assert md_from_opp > 0
+                v1 = 1 / md_from_opp
+                v2 = (1 / 4) * option_for_me
+                v3 = (1 / option_for_op) if option_for_op > 0 else 1
+                reachable_for_game = self.state.reachable_white_cells(player_id)
+                v4 = reachable_for_state / reachable_for_game
+                h_val = (2 / 11) * v1 + (3 / 11) * (v2 + v3 + v4)
+            else:  # staying alive strategy - maximum h_val is 0.5
+                print('SURVIVE!')
+                reachable_for_state_opp = state.reachable_white_cells(opponent_id)
+                v1 = reachable_for_state / reachable_for_state_opp if reachable_for_state_opp > 0 else 1
+                v2 = (1 / 3) * option_for_me
+                v3 = (1 / 3) * option_for_op
+                h_val = (1 / 6) * (v1 + v2 + v3)
+
+        print(f'heuristic_f - val: {h_val}')
         print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
         return h_val
 
-    def goal_f(self, state, pos, players_score):
+    def goal_f(self, state, pos):
         all_next_positions = [utils.tup_add(pos, direction) for direction in self.directions]
         possible_positions = [position for position in all_next_positions if pos_feasible_on_board(state, position)]
         player_cant_move = len(possible_positions) == 0
@@ -381,7 +391,5 @@ class Player(AbstractPlayer):
                                       pos_feasible_on_board(state, position)]
             opp_cant_move = len(possible_opp_positions) == 0
             if not opp_cant_move:
-                print('goal_f - returned True')
                 return True
-        print('goal_f - returned False')
         return False

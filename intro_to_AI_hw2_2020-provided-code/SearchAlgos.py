@@ -38,11 +38,11 @@ class MiniMax(SearchAlgos):
         :return: A tuple: (The min max algorithm value, The direction in case of max node or None in min mode)
         """
         pos = state.get_pos() if maximizing_player else state.get_opponent_pos()
-        if self.goal(state, pos, state.players_score):
+        if self.goal(state, pos):
             return self.utility(state.players_score, maximizing_player)
         if depth == 0:
             val = self.h(state, pos)
-            return val
+            return val if maximizing_player else -val
         if maximizing_player:
             curr_max = float('-inf')  # minus infinity
             for op in self.succ(state, pos):
@@ -55,9 +55,7 @@ class MiniMax(SearchAlgos):
                 if res > curr_max:
                     curr_max = res
                 self.perform_move(state, op, next_cell, prev_val)  # reversed operator
-                # TODO: important! check time limit mechanism
-                if state.get_time_left() < 0.003:  # TODO: important!!!!!!! check time limit mechanism
-                    # TODO: important! check time limit mechanism
+                if state.get_time_left() < 0.7:
                     return -2  # Interrupted
             return curr_max
         else:
@@ -72,9 +70,7 @@ class MiniMax(SearchAlgos):
                 if res < curr_min:
                     curr_min = res
                 self.perform_move(state, op, next_cell, prev_val)  # reversed operator
-                # TODO: important! check time limit mechanism
-                if state.get_time_left() < 0.003:  # TODO: important! check time limit mechanism
-                    # TODO: important! check time limit mechanism
+                if state.get_time_left() < 0.7:
                     return -2  # Interrupted
             return curr_min
 
