@@ -23,13 +23,13 @@ class SearchAlgos:
         self.goal = goal
         self.h = heuristic_f
 
-    def search(self, state, depth, maximizing_player, players_score):
+    def search(self, state, depth, maximizing_player):
         pass
 
 
 class MiniMax(SearchAlgos):
 
-    def search(self, state, depth, maximizing_player, players_score):
+    def search(self, state, depth, maximizing_player):
         """Start the MiniMax algorithm.
         :param players_score: The score of the players
         :param state: The state to start from.
@@ -38,8 +38,8 @@ class MiniMax(SearchAlgos):
         :return: A tuple: (The min max algorithm value, The direction in case of max node or None in min mode)
         """
         pos = state.get_pos() if maximizing_player else state.get_opponent_pos()
-        if self.goal(state, pos, players_score):
-            return self.utility(players_score, maximizing_player)
+        if self.goal(state, pos, state.players_score):
+            return self.utility(state.players_score, maximizing_player)
         if depth == 0:
             val = self.h(state, pos)
             return val
@@ -48,13 +48,13 @@ class MiniMax(SearchAlgos):
             for op in self.succ(state, pos):
                 next_cell = (pos[0] + op[0], pos[1] + op[1])
                 prev_val = state.board[next_cell]
-                new_state = self.perform_move(state, op, pos, players_score)
-                res = self.search(new_state, depth - 1, not maximizing_player, players_score)
+                new_state = self.perform_move(state, op, pos)
+                res = self.search(new_state, depth - 1, not maximizing_player)
                 if res == -2:
                     return res  # Interrupted
                 if res > curr_max:
                     curr_max = res
-                self.perform_move(state, op, next_cell, players_score, prev_val)  # reversed operator
+                self.perform_move(state, op, next_cell, prev_val)  # reversed operator
                 # TODO: important! check time limit mechanism
                 if state.get_time_left() < 0.003:  # TODO: important!!!!!!! check time limit mechanism
                     # TODO: important! check time limit mechanism
@@ -65,13 +65,13 @@ class MiniMax(SearchAlgos):
             for op in self.succ(state, pos):
                 next_cell = (pos[0] + op[0], pos[1] + op[1])
                 prev_val = state.board[next_cell]
-                new_state = self.perform_move(state, op, pos, players_score)
-                res = self.search(new_state, depth - 1, not maximizing_player, players_score)
+                new_state = self.perform_move(state, op, pos)
+                res = self.search(new_state, depth - 1, not maximizing_player)
                 if res == -2:
                     return res  # Interrupted
                 if res < curr_min:
                     curr_min = res
-                self.perform_move(state, op, next_cell, players_score, prev_val)  # reversed operator
+                self.perform_move(state, op, next_cell, prev_val)  # reversed operator
                 # TODO: important! check time limit mechanism
                 if state.get_time_left() < 0.003:  # TODO: important! check time limit mechanism
                     # TODO: important! check time limit mechanism

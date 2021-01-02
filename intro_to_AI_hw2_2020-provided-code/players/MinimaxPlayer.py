@@ -33,6 +33,13 @@ class State:
                 num_ops_available += 1
         return num_ops_available
 
+    def white_cells_on_board(self):
+        count = 0
+        for i in range(len(self.board)):
+            for j in range(len(self.board[0])):
+                if self.board[i][j] not in [-1, 1, 2]:count += 1
+        return count
+
     def reachable_white_cells(self, player_number):
         if player_number == 1:
             pos = self.get_pos()
@@ -194,8 +201,8 @@ class Player(AbstractPlayer):
                 new_pos = (self.pos[0] + op[0], self.pos[1] + op[1])
                 prev_val = state_copy.board[new_pos]
                 assert prev_val not in [-1, -2, 1, 2]
-                self.perform_move_f(state_copy, op, self.pos, state_copy.players_score)
-                res = minimax.search(state_copy, depth, True, state_copy.players_score)
+                self.perform_move_f(state_copy, op, self.pos)
+                res = minimax.search(state_copy, depth, True)
                 if res == -2:
                     move = op if move is None else move
                     # update local board and pos
@@ -208,7 +215,7 @@ class Player(AbstractPlayer):
                 if res > minimax_val:
                     minimax_val = res
                     move = op
-                self.perform_move_f(state_copy, op, new_pos, self.state.players_score, prev_val)
+                self.perform_move_f(state_copy, op, new_pos, prev_val)
                 assert len(state_copy.get_indexs_by_cond(lambda x: x == 2)) == 1
                 assert len(state_copy.get_indexs_by_cond(lambda x: x == 1)) == 1
                 depth += 1
@@ -286,7 +293,7 @@ class Player(AbstractPlayer):
         return avail_op
 
     # gets an op and moves the player accroding to this op, prev_val will be passed before recursic call
-    def perform_move_f(self, state, op, pos, players_score, prev_val=-2):
+    def perform_move_f(self, state, op, pos, prev_val=-2):
         assert len(state.get_indexs_by_cond(lambda x: x == 2)) == 1
         assert len(state.get_indexs_by_cond(lambda x: x == 1)) == 1
         player_id = state.board[pos]
@@ -294,14 +301,14 @@ class Player(AbstractPlayer):
             state.board[pos] = -1
             new_pos = (pos[0] + op[0], pos[1] + op[1])
             val_next_cell = state.board[new_pos[0]][new_pos[1]]
-            players_score[int(player_id) - 1] += int(val_next_cell)
+            state.players_score[int(player_id) - 1] += int(val_next_cell)
             state.board[new_pos] = player_id
         else:
             assert prev_val not in [1, 2]
             state.board[pos[0], pos[1]] = prev_val
             if player_id not in [1, 2]:
                 print(player_id)
-            players_score[int(player_id) - 1] -= prev_val
+            state.players_score[int(player_id) - 1] -= prev_val
             last_pos = (pos[0] - op[0], pos[1] - op[1])
             state.board[last_pos] = player_id
         assert len(state.get_indexs_by_cond(lambda x: x == 2)) == 1
@@ -333,12 +340,14 @@ class Player(AbstractPlayer):
             print(f'pos - {pos} opp_pos - {opp_pos}')
             md_from_opp = abs(pos[0] - opp_pos[0]) + abs(pos[1] - opp_pos[1])
             assert md_from_opp > 0
+            reachable = self.state.reachable_white_cells(opponent_id)
+            white_cells_on_board = self.state.white_cells_on_board()
             v1 = 1 / md_from_opp
-            v2 = self.state.reachable_white_cells(opponent_id) / self.state.board.size
-            v3 = self.state.reachable_white_cells(player_id) / self.state.board.size
+            v2 = reachable / white_cells_on_board
+            v3 = white_cells_on_board / self.state.board.size
             v4 = (1 / option_for_op) if option_for_op > 0 else 1
             v5 = (1 / 3) * option_for_me
-            h_val = (1 / 10) * (v1 + v2 + v3) + (4 / 10) * v4 + (3 / 10) * v5
+            h_val = (2 / 10) * (v1 + v5) + (1 / 10) * (v2 + v3) + (4 / 10) * v4
             print(f'heuristic_f - val: {h_val}')
         elif fruits > 0:  # search fruit strategy
             print('MAX SCORE!')
@@ -346,12 +355,15 @@ class Player(AbstractPlayer):
             v2 = 1 / option_for_op if option_for_op > 0 else 1
             option_for_me = state.state_options(self.pos)
             v3 = (1 / 3) * option_for_me
-            v4 = difference / 300  # could be negative
+            v4 = difference / self.penalty_score if difference > 0 else v1  # if opp is winning give more weight to fruit
             h_val = (1 / 6) * (v1 + v2 + v3) + (1 / 2) * v4
             print(f'heuristic_f - val 2: {h_val}')
         else:  # staying alive strategy - maximum h_val is 0.5
             print('SURVIVE!')
-            h_val = (self.state.reachable_white_cells(player_id) / (self.state.board.size - 2)) / 2
+            reachable_for_me = self.state.reachable_white_cells(player_id)
+            reachable_for_opp = self.state.reachable_white_cells(opponent_id)
+            v1 = reachable_for_me / reachable_for_opp
+            h_val = (1 / 2) * v1
         print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
         return h_val
 
