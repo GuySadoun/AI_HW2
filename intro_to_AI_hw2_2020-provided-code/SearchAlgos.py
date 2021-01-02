@@ -23,16 +23,14 @@ class SearchAlgos:
         self.goal = goal
         self.h = heuristic_f
 
-    def search(self, state, depth, maximizing_player, players_score, start_time, time_limit):
+    def search(self, state, depth, maximizing_player, players_score):
         pass
 
 
 class MiniMax(SearchAlgos):
 
-    def search(self, state, depth, maximizing_player, players_score, start_time, time_limit):
+    def search(self, state, depth, maximizing_player, players_score):
         """Start the MiniMax algorithm.
-        :param time_limit: The limit of the time allowed to use for searching
-        :param start_time: The time we started the searching
         :param players_score: The score of the players
         :param state: The state to start from.
         :param depth: The maximum allowed depth for the algorithm.
@@ -51,14 +49,14 @@ class MiniMax(SearchAlgos):
                 next_cell = (pos[0] + op[0], pos[1] + op[1])
                 prev_val = state.board[next_cell]
                 new_state = self.perform_move(state, op, pos, players_score)
-                res = self.search(new_state, depth - 1, not maximizing_player, players_score, start_time, time_limit)
+                res = self.search(new_state, depth - 1, not maximizing_player, players_score)
                 if res == -2:
                     return res  # Interrupted
                 if res > curr_max:
                     curr_max = res
                 self.perform_move(state, op, next_cell, players_score, prev_val)  # reversed operator
                 # TODO: important! check time limit mechanism
-                if time.time() - start_time > time_limit:  # TODO: important!!!!!!! check time limit mechanism
+                if state.get_time_left() < 0.003:  # TODO: important!!!!!!! check time limit mechanism
                     # TODO: important! check time limit mechanism
                     return -2  # Interrupted
             return curr_max
@@ -68,14 +66,14 @@ class MiniMax(SearchAlgos):
                 next_cell = (pos[0] + op[0], pos[1] + op[1])
                 prev_val = state.board[next_cell]
                 new_state = self.perform_move(state, op, pos, players_score)
-                res = self.search(new_state, depth - 1, not maximizing_player, players_score, start_time, time_limit)
+                res = self.search(new_state, depth - 1, not maximizing_player, players_score)
                 if res == -2:
                     return res  # Interrupted
                 if res < curr_min:
                     curr_min = res
                 self.perform_move(state, op, next_cell, players_score, prev_val)  # reversed operator
                 # TODO: important! check time limit mechanism
-                if time.time() - start_time > time_limit:  # TODO: important! check time limit mechanism
+                if state.get_time_left() < 0.003:  # TODO: important! check time limit mechanism
                     # TODO: important! check time limit mechanism
                     return -2  # Interrupted
             return curr_min

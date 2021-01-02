@@ -21,10 +21,8 @@ class State:
         self.board = board
         self.players_score = players_score
         self.player_number = player_number
-        # self.penalty_score = penalty_score
-        # self.maximizing_player = maximizing_player
-        # self.time = time
-        # self.time_limit = time_limit
+        self.start_time = None
+        self.time_limit = None
 
     def state_options(self, pos):
         num_ops_available = 0
@@ -57,9 +55,26 @@ class State:
                     count += 1
                     # limit the amount of white cells we want to check because far white cells are less relevant for us,
                     # since there is a high probability that they will be grey until we reach them
-                    if count > board_copy.size / 2:
+                    if count > board_copy.size:
                         break
         return count
+
+    def is_players_connected(self):
+        board_copy = copy.deepcopy(self.board)
+        reachable = [self.get_pos()]
+        opp_pos = self.get_opponent_pos()
+        while len(reachable) > 0:
+            curr_pos = reachable.pop()
+            for d in utils.get_directions():
+                i = curr_pos[0] + d[0]
+                j = curr_pos[1] + d[1]
+                if opp_pos[0] == i and opp_pos[1] == j:
+                    return True
+                if 0 <= i < len(board_copy) and 0 <= j < len(board_copy[0]) and (board_copy[i][j] not in [-1, 1]):
+                    assert board_copy[i][j] != 2
+                    board_copy[i, j] = -1
+                    reachable.append((i, j))
+        return False
 
     def get_indexs_by_cond(self, cond):
         ret = []
@@ -86,15 +101,21 @@ class State:
     def get_player_number(self):
         return self.player_number
 
-    # def get_maximizing_player(self):
-    #     return self.maximizing_player
+    def get_time_limit(self):
+        return self.time_limit
 
-    # def get_time_limit(self):
-    #     return self.time_limit
+    def get_time_left(self):
+        time_passed = time.time() - self.start_time
+        time_left = self.time_limit - time_passed
+        print(f'time passed = {time_passed}')
+        print(f'time left = {time_left}')
+        return time_left
 
-    # def get_time(self):`
-    #     return self.time
-    # TODO: Delete comments from state class
+    def set_time_limit(self, time_limit):
+        self.time_limit = time_limit
+
+    def set_start_time(self, start_time):
+        self.start_time = start_time
 
 
 def print_board(state):
@@ -149,7 +170,8 @@ class Player(AbstractPlayer):
         output:
             - direction: tuple, specifing the Player's movement, chosen from self.directions
         """
-        start_time = time.time()
+        self.state.set_start_time(time.time())
+        self.state.set_time_limit(time_limit)
         minimax = MiniMax(self.utility_f, self.succ_f, self.perform_move_f, self.state.players_score,
                           goal=self.goal_f, heuristic_f=self.heuristic_f)
 
@@ -173,8 +195,9 @@ class Player(AbstractPlayer):
                 prev_val = state_copy.board[new_pos]
                 assert prev_val not in [-1, -2, 1, 2]
                 self.perform_move_f(state_copy, op, self.pos, state_copy.players_score)
-                res = minimax.search(state_copy, depth, True, state_copy.players_score, start_time, 1)
+                res = minimax.search(state_copy, depth, True, state_copy.players_score)
                 if res == -2:
+                    move = op if move is None else move
                     # update local board and pos
                     new_pos = (self.pos[0] + move[0], self.pos[1] + move[1])
                     self.state.players_score[0] += self.state.board[new_pos]
@@ -296,6 +319,7 @@ class Player(AbstractPlayer):
         opp_pos = state.get_indexs_by_cond(lambda x: x == opponent_id)[0]
         option_for_op = state.state_options(opp_pos)
         option_for_me = state.state_options(pos)
+        is_opp_reachable = state.is_players_connected()
         for fruit in state.get_indexs_by_cond(lambda x: x > 2):  # find closest fruit and who's closer to max fruit
             fruits += 1
             md_dist = abs(pos[0] - fruit[0]) + abs(pos[1] - fruit[1])
@@ -304,19 +328,19 @@ class Player(AbstractPlayer):
                 closest = md_dist
                 closest_val = state.board[fruit]
                 print(f'fruit at {fruit} far {closest} from {pos}')
-        if fruits == 0 and difference > -self.penalty_score:  # close your enemy strategy
+        if fruits == 0 and difference > -self.penalty_score and is_opp_reachable:  # close your enemy strategy
             print('EAT YOUR ENEMY!')
             print(f'pos - {pos} opp_pos - {opp_pos}')
             md_from_opp = abs(pos[0] - opp_pos[0]) + abs(pos[1] - opp_pos[1])
             assert md_from_opp > 0
             v1 = 1 / md_from_opp
-            v2 = self.state.reachable_white_cells(opponent_id) / 36
-            v3 = self.state.reachable_white_cells(player_id) / 36
+            v2 = self.state.reachable_white_cells(opponent_id) / self.state.board.size
+            v3 = self.state.reachable_white_cells(player_id) / self.state.board.size
             v4 = (1 / option_for_op) if option_for_op > 0 else 1
             v5 = (1 / 3) * option_for_me
-            h_val = (1 / 7) * (v1 + v2 + v3 + v4) + (3 / 7) * v5
+            h_val = (1 / 10) * (v1 + v2 + v3) + (4 / 10) * v4 + (3 / 10) * v5
             print(f'heuristic_f - val: {h_val}')
-        else:
+        elif fruits > 0:  # search fruit strategy
             print('MAX SCORE!')
             v1 = (1 / closest) * (closest_val / 300) if closest_val != -1 else 0
             v2 = 1 / option_for_op if option_for_op > 0 else 1
@@ -325,8 +349,10 @@ class Player(AbstractPlayer):
             v4 = difference / 300  # could be negative
             h_val = (1 / 6) * (v1 + v2 + v3) + (1 / 2) * v4
             print(f'heuristic_f - val 2: {h_val}')
-        print('***************************************************')
-        print('***************************************************')
+        else:  # staying alive strategy - maximum h_val is 0.5
+            print('SURVIVE!')
+            h_val = (self.state.reachable_white_cells(player_id) / (self.state.board.size - 2)) / 2
+        print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
         return h_val
 
     def goal_f(self, state, pos, players_score):

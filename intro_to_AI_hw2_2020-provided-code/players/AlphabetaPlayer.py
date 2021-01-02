@@ -5,7 +5,7 @@ from players.AbstractPlayer import AbstractPlayer
 #TODO: you can import more modules, if needed
 
 
-class Player(AbstractPlayer):
+class Player(MinimaxPlayer):
     def __init__(self, game_time, penalty_score):
         AbstractPlayer.__init__(self, game_time, penalty_score) # keep the inheritance of the parent's (AbstractPlayer) __init__()
         #TODO: initialize more fields, if needed, and the AlphaBeta algorithm from SearchAlgos.py

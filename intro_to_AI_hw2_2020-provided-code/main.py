@@ -17,7 +17,7 @@ if __name__ == "__main__":
                         help='The type of the second player.',
                         choices=players_options)
     
-    parser.add_argument('-board', default='default_board.csv', type=str, 
+    parser.add_argument('-board', default='rectangle_board.csv', type=str,
                         help='Name of board file (.csv).')
 
     parser.add_argument('-move_time', default=200, type=float, 
