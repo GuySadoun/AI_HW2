@@ -173,7 +173,7 @@ class Player(AbstractPlayer):
                 prev_val = state_copy.board[new_pos]
                 assert prev_val not in [-1, -2, 1, 2]
                 self.perform_move_f(state_copy, op, self.pos, state_copy.players_score)
-                res = minimax.search(state_copy, depth, True, state_copy.players_score, start_time, time_limit)
+                res = minimax.search(state_copy, depth, True, state_copy.players_score, start_time, 1)
                 if res == -2:
                     # update local board and pos
                     new_pos = (self.pos[0] + move[0], self.pos[1] + move[1])

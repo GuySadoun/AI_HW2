@@ -57,7 +57,9 @@ class MiniMax(SearchAlgos):
                 if res > curr_max:
                     curr_max = res
                 self.perform_move(state, op, next_cell, players_score, prev_val)  # reversed operator
-                if time.time() - start_time > time_limit:
+                # TODO: important! check time limit mechanism
+                if time.time() - start_time > time_limit:  # TODO: important!!!!!!! check time limit mechanism
+                    # TODO: important! check time limit mechanism
                     return -2  # Interrupted
             return curr_max
         else:
@@ -72,7 +74,9 @@ class MiniMax(SearchAlgos):
                 if res < curr_min:
                     curr_min = res
                 self.perform_move(state, op, next_cell, players_score, prev_val)  # reversed operator
-                if time.time() - start_time > time_limit:
+                # TODO: important! check time limit mechanism
+                if time.time() - start_time > time_limit:  # TODO: important! check time limit mechanism
+                    # TODO: important! check time limit mechanism
                     return -2  # Interrupted
             return curr_min
 
