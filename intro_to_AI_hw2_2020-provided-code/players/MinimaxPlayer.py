@@ -180,7 +180,7 @@ class Player(AbstractPlayer):
 
         move = None
         minimax_val = float('-inf')
-        depth = 2
+        depth = 1
         children = self.succ_f(self.state, self.pos)
         tribal_point = 1
         if len(children) == 1:
@@ -199,7 +199,7 @@ class Player(AbstractPlayer):
                 assert prev_val not in [-1, -2, 1, 2]
                 self.perform_move_f(state_copy, op, self.pos)
                 res = minimax.search(state_copy, depth, True)
-                if res == -2:
+                if res == -2 or move is None:
                     move = op if move is None else move
                     # update local board and pos
                     new_pos = (self.pos[0] + move[0], self.pos[1] + move[1])

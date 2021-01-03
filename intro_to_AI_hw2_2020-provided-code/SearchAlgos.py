@@ -1,5 +1,6 @@
 """Search Algos: MiniMax, AlphaBeta
 """
+import random
 import time
 
 from utils import ALPHA_VALUE_INIT, BETA_VALUE_INIT
@@ -97,6 +98,10 @@ class AlphaBeta(SearchAlgos):
             return val if maximizing_player else -val
         if maximizing_player:
             curr_max = float('-inf')  # minus infinity
+
+            # children_randomed = self.succ(state, pos).copy()
+            # random.shuffle(children_randomed)
+            # for op in children_randomed:
             for op in self.succ(state, pos):
                 next_cell = (pos[0] + op[0], pos[1] + op[1])
                 prev_val = state.board[next_cell]

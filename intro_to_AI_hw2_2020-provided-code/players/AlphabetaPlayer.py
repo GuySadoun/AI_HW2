@@ -2,7 +2,6 @@
 MiniMax Player with AlphaBeta pruning
 """
 import copy
-import random
 import time
 import numpy as np
 
@@ -53,7 +52,7 @@ class Player(AbstractPlayer):
 
         move = None
         minimax_val = float('-inf')
-        depth = 2
+        depth = 1
         children = self.succ_f(self.state, self.pos)
         tribal_point = 1
         if len(children) == 1:
@@ -65,17 +64,15 @@ class Player(AbstractPlayer):
             self.pos = new_pos
             return move
         while True:
-            children_randomed = children.copy()
-            random.shuffle(children_randomed)
-            # for op in children:
-            for op in children_randomed:
+            for op in children:
                 state_copy = copy.deepcopy(self.state)
                 new_pos = (self.pos[0] + op[0], self.pos[1] + op[1])
                 prev_val = state_copy.board[new_pos]
                 assert prev_val not in [-1, -2, 1, 2]
                 self.perform_move_f(state_copy, op, self.pos)
-                res = alphabeta.search(state_copy, depth, is_root=True)
-                if res == -2:
+                # res = alphabeta.search(state_copy, depth, True)
+                res = alphabeta.search(state_copy, depth, ALPHA_VALUE_INIT, BETA_VALUE_INIT, True)
+                if res == -2 or move is None:
                     move = op if move is None else move
                     # update local board and pos
                     new_pos = (self.pos[0] + move[0], self.pos[1] + move[1])
