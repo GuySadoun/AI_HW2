@@ -372,16 +372,11 @@ class Player(AbstractPlayer):
                 h_val *= 0.8
             else:  # staying alive strategy - maximum h_val is 0.5
                 strategy = 'SURVIVE!'
-                reachable_for_state_opp = state.reachable_white_cells(opponent_id)
-                if reachable_for_state_opp > 0:
-                    reachable_for_state = state.reachable_white_cells(player_id)
-                    v1 = (reachable_for_state / reachable_for_state_opp) / 10
-                    if v1 > 0.9:
-                        v1 = 0.9
-                else:
-                    v1 = 0.9
-                v2 = (1 / 3) * option_for_me
-                h_val = (1 / 4) * (v1 + v2)
+                reachable_for_game = self.state.reachable_white_cells(player_id)
+                assert reachable_for_game > 0
+                reachable_for_state = state.reachable_white_cells(player_id)
+                v1 = (reachable_for_state / reachable_for_game)
+                h_val = (1 / 2) * v1
 
         # print(f'strategy = {strategy}')
         # print(f'heuristic_f - val: {h_val}')
