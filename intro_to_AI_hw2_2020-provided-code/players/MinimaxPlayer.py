@@ -350,7 +350,7 @@ class Player(AbstractPlayer):
                 v3 = 1 / closest_md_for_me
             v2 = min(state.players_score[0] - state.players_score[1] / max_fruit, 1)
             h_val = (1 / 3) * (v1 + v2 + v3)
-            print(f'(1/3) * ({v1} + {v2} + {v3}) = {h_val}')
+            # print(f'(1/3) * ({v1} + {v2} + {v3}) = {h_val}')
         else:
             if is_opp_reachable_state:  # close your enemy strategy - maximum h_val is 0.8
                 strategy = 'EAT YOUR ENEMY!'
@@ -367,8 +367,8 @@ class Player(AbstractPlayer):
                 v5 = (reachable_for_opp_on_game - reachable_for_opp_for_state) / reachable_for_opp_on_game
                 v6 = (1 / 3) * option_for_opp
                 v7 = (1 / 3) * option_for_me
-                print(f'v1: {v1} v2: {v2} v3: {v3} v4: {v4} v5: {v5} v6: {v6} v7: {v7}')
-                h_val = (1/11) * (v1 + v2 + v3 + v4 + v6 + v7) + (5 / 11) + v5
+                # print(f'v1: {v1} v2: {v2} v3: {v3} v4: {v4} v5: {v5} v6: {v6} v7: {v7}')
+                h_val = (3/22) * (v1 + v2 + v3 + v4 + v6 + v7) + (2 / 11) + v5
                 h_val *= 0.8
             else:  # staying alive strategy - maximum h_val is 0.5
                 strategy = 'SURVIVE!'
@@ -384,9 +384,9 @@ class Player(AbstractPlayer):
                 v3 = (1 / 3) * option_for_opp
                 h_val = (1 / 6) * (v1 + v2 + v3)
 
-        print(f'strategy = {strategy}')
-        print(f'heuristic_f - val: {h_val}')
-        print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+        # print(f'strategy = {strategy}')
+        # print(f'heuristic_f - val: {h_val}')
+        # print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
         return h_val
 
     def goal_f(self, state, pos):
