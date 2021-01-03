@@ -318,15 +318,15 @@ class Player(AbstractPlayer):
         closest_val = -1
         fruits = 0
         max_fruit = -1
+        h_maybe = 0
         if is_opp_reachable_game and not is_opp_reachable_state:
             reachable_for_state_opp = state.reachable_white_cells(opponent_id)
             if reachable_for_state_opp > 0:
                 reachable_for_state = state.reachable_white_cells(player_id)
-                ret = (reachable_for_state / reachable_for_state_opp) / 10
-                if ret > 0.92:
-                    ret = 0.92
-                    print(f'val = {ret}')
-                return ret  # in some cases can assure victory
+                h_maybe = (reachable_for_state / reachable_for_state_opp) / 10
+                if h_maybe > 0.92 and abs(state.players_score[0] - state.players_score[1]) < 300:
+                    h_maybe = 0.92
+                    # print(f'h_maybe = {ret}')
 
         for fruit in self.state.get_indexs_by_cond(lambda x: x > 2):  # find closest fruit and who's closer to max fruit
             fruits += 1
@@ -346,7 +346,7 @@ class Player(AbstractPlayer):
                 v1 = 1
                 v3 = 1
             else:
-                v1 = (1 / closest_md_for_me) * (closest_val / self.penalty_score)
+                v1 = (1 / closest_md_for_me) * (closest_val / max_fruit)
                 v3 = 1 / closest_md_for_me
             v2 = min(state.players_score[0] - state.players_score[1] / max_fruit, 1)
             h_val = (1 / 3) * (v1 + v2 + v3)
@@ -387,7 +387,7 @@ class Player(AbstractPlayer):
         # print(f'strategy = {strategy}')
         # print(f'heuristic_f - val: {h_val}')
         # print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-        return h_val
+        return max(h_val, h_maybe)
 
     def goal_f(self, state, pos):
         all_next_positions = [utils.tup_add(pos, direction) for direction in self.directions]
