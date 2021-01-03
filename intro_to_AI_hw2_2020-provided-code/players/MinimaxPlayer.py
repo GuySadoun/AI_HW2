@@ -348,7 +348,7 @@ class Player(AbstractPlayer):
             else:
                 v1 = (1 / closest_md_for_me) * (closest_val / max_fruit)
                 v3 = 1 / closest_md_for_me
-            v2 = min(state.players_score[0] - state.players_score[1] / max_fruit, 1)
+            v2 = max(min(state.players_score[0] - state.players_score[1] / max_fruit, 1), 0)
             h_val = (1 / 3) * (v1 + v2 + v3)
             # print(f'(1/3) * ({v1} + {v2} + {v3}) = {h_val}')
         else:
@@ -359,10 +359,10 @@ class Player(AbstractPlayer):
                 v1 = 1 / md_from_opp
                 v2 = (1 / 8) * option_for_me
                 v3 = (1 / option_for_opp) if option_for_opp > 0 else 1
-                reachable_for_me = state.reachable_white_cells(player_id)
+                reachable_for_me_for_state = state.reachable_white_cells(player_id)
                 reachable_for_opp_for_state = state.reachable_white_cells(opponent_id)
                 reachable_for_opp_for_state = max(reachable_for_opp_for_state, 1)  # avoid division by zero
-                v4 = min(reachable_for_me / reachable_for_opp_for_state, 1)
+                v4 = min(reachable_for_me_for_state / reachable_for_opp_for_state, 1)
                 reachable_for_opp_on_game = self.state.reachable_white_cells(opponent_id)
                 v5 = (reachable_for_opp_on_game - reachable_for_opp_for_state) / reachable_for_opp_on_game
                 v6 = (1 / 3) * option_for_opp
@@ -381,8 +381,7 @@ class Player(AbstractPlayer):
                 else:
                     v1 = 0.9
                 v2 = (1 / 3) * option_for_me
-                v3 = (1 / 3) * option_for_opp
-                h_val = (1 / 6) * (v1 + v2 + v3)
+                h_val = (1 / 4) * (v1 + v2)
 
         # print(f'strategy = {strategy}')
         # print(f'heuristic_f - val: {h_val}')
