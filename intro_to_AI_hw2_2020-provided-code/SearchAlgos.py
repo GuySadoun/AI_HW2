@@ -44,7 +44,8 @@ class MiniMax(SearchAlgos):
             return self.utility(state.players_score, maximizing_player)
         if depth == 0:
             val = self.h(state, pos)
-            return val if maximizing_player else -val
+            return val
+            # return val if maximizing_player else -val
         if maximizing_player:
             curr_max = float('-inf')  # minus infinity
             for op in self.succ(state, pos):
@@ -95,7 +96,7 @@ class AlphaBeta(SearchAlgos):
             return self.utility(state.players_score, maximizing_player)
         if depth == 0:
             val = self.h(state, pos)
-            return val if maximizing_player else -val
+            return val
         if maximizing_player:
             curr_max = float('-inf')  # minus infinity
 

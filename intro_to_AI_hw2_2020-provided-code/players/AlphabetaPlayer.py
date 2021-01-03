@@ -177,9 +177,9 @@ class Player(AbstractPlayer):
     def heuristic_f(self, state, pos):
         # print('***************************************************')
         board_len = len(state.board[0])
-        is_leading = state.players_score[0] - state.players_score[1] > 0
-        player_id = state.board[pos]
+        player_id = self.state.board[self.pos]
         opponent_id = player_id % 2 + 1
+        is_leading = state.players_score[int(player_id-1)] - state.players_score[int(opponent_id-1)] > 0
         opp_pos = state.get_indexs_by_cond(lambda x: x == opponent_id)[0]
         option_for_op = state.state_options(opp_pos)
         option_for_me = state.state_options(pos)
