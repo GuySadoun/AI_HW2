@@ -94,14 +94,14 @@ class AlphaBeta(SearchAlgos):
             return self.utility(state.players_score, maximizing_player)
         if depth == 0:
             val = self.h(state, pos)
-            return val
+            return val if maximizing_player else -val
         if maximizing_player:
             curr_max = float('-inf')  # minus infinity
             for op in self.succ(state, pos):
                 next_cell = (pos[0] + op[0], pos[1] + op[1])
                 prev_val = state.board[next_cell]
                 new_state = self.perform_move(state, op, pos)
-                res = self.search(new_state, depth - 1, not maximizing_player)
+                res = self.search(new_state, depth - 1, not maximizing_player, alpha, beta)
                 if res == -2 and not is_root:
                     return res  # Interrupted
                 elif is_root:
@@ -123,7 +123,7 @@ class AlphaBeta(SearchAlgos):
                 next_cell = (pos[0] + op[0], pos[1] + op[1])
                 prev_val = state.board[next_cell]
                 new_state = self.perform_move(state, op, pos)
-                res = self.search(new_state, depth - 1, not maximizing_player)
+                res = self.search(new_state, depth - 1, not maximizing_player, alpha, beta)
                 if res == -2:
                     return res  # Interrupted
                 if res < curr_min:
@@ -132,7 +132,7 @@ class AlphaBeta(SearchAlgos):
                 # start alpha beta adaption:
                 beta = min(curr_min, beta)
                 if curr_min <= alpha:
-                    return float('inf')
+                    return float('-inf')
                 # end alpha beta adaption
                 if state.get_time_left() < 0.7:
                     return -2  # Interrupted

@@ -2,6 +2,7 @@
 MiniMax Player with AlphaBeta pruning
 """
 import copy
+import random
 import time
 import numpy as np
 
@@ -64,13 +65,16 @@ class Player(AbstractPlayer):
             self.pos = new_pos
             return move
         while True:
-            for op in children:
+            children_randomed = children.copy()
+            random.shuffle(children_randomed)
+            # for op in children:
+            for op in children_randomed:
                 state_copy = copy.deepcopy(self.state)
                 new_pos = (self.pos[0] + op[0], self.pos[1] + op[1])
                 prev_val = state_copy.board[new_pos]
                 assert prev_val not in [-1, -2, 1, 2]
                 self.perform_move_f(state_copy, op, self.pos)
-                res = alphabeta.search(state_copy, depth, True)
+                res = alphabeta.search(state_copy, depth, is_root=True)
                 if res == -2:
                     move = op if move is None else move
                     # update local board and pos
@@ -188,15 +192,16 @@ class Player(AbstractPlayer):
         closest_md_for_opp = float('inf')
         closest_val = -1
         fruits = 0
+        h_maybe = 0
         if is_opp_reachable_game and not is_opp_reachable_state:
             reachable_for_state_opp = state.reachable_white_cells(opponent_id)
             if reachable_for_state_opp > 0:
                 reachable_for_state = state.reachable_white_cells(player_id)
-                ret = (reachable_for_state / reachable_for_state_opp) / 10
-                if ret > 0.9:
-                    ret = 0.9
-                    print(f'val = {ret}')
-                return ret  # in some cases can assure victory
+                h_maybe = (reachable_for_state / reachable_for_state_opp) / 10
+                if h_maybe > 0.9:
+                    h_maybe = 0.9
+                    print(f'val = {h_maybe}')
+                # return ret  # in some cases can assure victory
 
         for fruit in self.state.get_indexs_by_cond(lambda x: x > 2):  # find closest fruit and who's closer to max fruit
             fruits += 1
@@ -251,7 +256,7 @@ class Player(AbstractPlayer):
         # print(f'v1: {v1} v2: {v2} v3: {v3}')
         # print(f'heuristic_f - val: {h_val}')
         # print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-        return h_val
+        return max(h_val, h_maybe)
 
     def goal_f(self, state, pos):
         all_next_positions = [utils.tup_add(pos, direction) for direction in self.directions]
