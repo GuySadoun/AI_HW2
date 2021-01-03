@@ -9,7 +9,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     
-    parser.add_argument('-player1', default='AlphabetaPlayer', type=str,
+    parser.add_argument('-player1', default='GlobalTimeABPlayer', type=str,
                         help='The type of the first player.',
                         choices=players_options)
     #SimplePlayer
@@ -20,9 +20,9 @@ if __name__ == "__main__":
     parser.add_argument('-board', default='rectangle_board.csv', type=str,
                         help='Name of board file (.csv).')
 
-    parser.add_argument('-move_time', default=5, type=float,
+    parser.add_argument('-move_time', default=0.1, type=float,
                         help='Time (sec) for each turn.')
-    parser.add_argument('-game_time', default=2000, type=float, 
+    parser.add_argument('-game_time', default=0.1, type=float,
                         help='Global game time (sec) for each player.')
     parser.add_argument('-penalty_score', default=300, type=float, 
                         help='Penalty points for a player when it cant move or its time ends.')
@@ -74,7 +74,8 @@ if __name__ == "__main__":
                     terminal_viz= args.terminal_viz,
                     print_game_in_terminal=not args.dont_print_game,
                     time_to_make_a_move=args.move_time, 
-                    game_time=game_time, 
+                    # game_time=game_time,
+                    game_time=0.02,
                     penalty_score = args.penalty_score,
                     max_fruit_score = args.max_fruit_score,
                     max_fruit_time = args.max_fruit_time)
