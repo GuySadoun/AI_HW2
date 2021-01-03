@@ -43,9 +43,7 @@ class MiniMax(SearchAlgos):
         if self.goal(state, pos):
             return self.utility(state.players_score, maximizing_player)
         if depth == 0:
-            val = self.h(state, pos)
-            return val
-            # return val if maximizing_player else -val
+            return self.h(state)
         if maximizing_player:
             curr_max = float('-inf')  # minus infinity
             for op in self.succ(state, pos):
@@ -60,7 +58,7 @@ class MiniMax(SearchAlgos):
                 if res > curr_max:
                     curr_max = res
                 self.perform_move(state, op, next_cell, prev_val)  # reversed operator
-                if state.get_time_left() < 0.7:
+                if state.get_time_left() < 0.6:
                     return -2  # Interrupted
             return curr_max
         else:
@@ -75,7 +73,7 @@ class MiniMax(SearchAlgos):
                 if res < curr_min:
                     curr_min = res
                 self.perform_move(state, op, next_cell, prev_val)  # reversed operator
-                if state.get_time_left() < 0.7:
+                if state.get_time_left() < 0.6:
                     return -2  # Interrupted
             return curr_min
 
