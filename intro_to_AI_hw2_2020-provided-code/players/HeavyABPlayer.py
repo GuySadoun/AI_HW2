@@ -14,12 +14,13 @@ from utils import ALPHA_VALUE_INIT, BETA_VALUE_INIT
 
 
 class Player(AbstractPlayer):
-    def __init__(self, game_time, penalty_score):
+    def __init__(self, game_time, penalty_score, depth):
         AbstractPlayer.__init__(self, game_time,
                                 penalty_score)  # keep the inheritance of the parent's (AbstractPlayer) __init__()
         # TODO: initialize more fields, if needed, and the AlphaBeta algorithm from SearchAlgos.py
         self.alpha = ALPHA_VALUE_INIT
         self.beta = BETA_VALUE_INIT
+        self.depth = depth
         self.pos = None
         self.opp_pos = None
         self.state = None
@@ -53,7 +54,7 @@ class Player(AbstractPlayer):
         alphabeta = AlphaBeta(self.utility_f, self.succ_f, self.perform_move_f, self.state.players_score,
                               goal=self.goal_f, heuristic_f=self.heuristic_f)
         minimax_val = float('-inf')
-        depth = 0
+        depth = self.depth
         children = self.succ_f(self.state, self.pos)
         move = children[0]
         res_for_prev_depth = 0
@@ -65,32 +66,36 @@ class Player(AbstractPlayer):
             self.state.board[new_pos] = 1
             self.pos = new_pos
             return move
-        while True:
-            state_copy = copy.deepcopy(self.state)
-            res = -1
-            for op in children:
-                new_pos = (self.pos[0] + op[0], self.pos[1] + op[1])
-                prev_val = state_copy.board[new_pos]
-                # assert prev_val not in [-1, -2, 1, 2]
-                self.perform_move_f(state_copy, op, self.pos)
-                res = alphabeta.search(state_copy, depth, ALPHA_VALUE_INIT, BETA_VALUE_INIT, True)
-                if res > minimax_val:
-                    minimax_val = res
-                    move = op
-                self.perform_move_f(state_copy, op, new_pos, prev_val)
-                # assert len(state_copy.get_indexs_by_cond(lambda x: x == 2)) == 1
-                # assert len(state_copy.get_indexs_by_cond(lambda x: x == 1)) == 1
+        # while True:
+        state_copy = copy.deepcopy(self.state)
+        res = -1
+        for op in children:
+            new_pos = (self.pos[0] + op[0], self.pos[1] + op[1])
+            prev_val = state_copy.board[new_pos]
+            # assert prev_val not in [-1, -2, 1, 2]
+            self.perform_move_f(state_copy, op, self.pos)
+            res = alphabeta.search_without_time_limit(state_copy, depth, ALPHA_VALUE_INIT, BETA_VALUE_INIT, True)
+            if res > minimax_val:
+                minimax_val = res
+                move = op
+            self.perform_move_f(state_copy, op, new_pos, prev_val)
+            # assert len(state_copy.get_indexs_by_cond(lambda x: x == 2)) == 1
+            # assert len(state_copy.get_indexs_by_cond(lambda x: x == 1)) == 1
             # print('##########################################################')
             # print(f'for depth - {depth} max val - {minimax_val} move - {move}')
-            if res == 0 or res_for_prev_depth == res:
-                tribal_point += 1
-                if tribal_point == 3:
-                    break
-            res_for_prev_depth = res
-            depth += 1
-            if state_copy.get_time_left() < 0.7:
-                # print(f'move decided = {move} with val = {minimax_val}')
-                break
+
+            # if res == 0 or res_for_prev_depth == res:
+            #     tribal_point += 1
+            #     if tribal_point == 3:
+            #         break
+            # res_for_prev_depth = res
+            # depth += 1
+            # if depth == 4:
+            #     break
+
+            # if state_copy.get_time_left() < 0.7:
+            #     # print(f'move decided = {move} with val = {minimax_val}')
+            #     break
 
         # update local board and pos
         self.perform_move_f(self.state, move, self.pos)
