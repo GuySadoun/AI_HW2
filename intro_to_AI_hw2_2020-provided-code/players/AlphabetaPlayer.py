@@ -11,16 +11,20 @@ from players.AbstractPlayer import AbstractPlayer
 from players.MinimaxPlayer import State
 from players.MinimaxPlayer import pos_feasible_on_board
 from utils import ALPHA_VALUE_INIT, BETA_VALUE_INIT
-#TODO: you can import more modules, if needed
+
+
+# TODO: you can import more modules, if needed
 
 
 class Player(AbstractPlayer):
     def __init__(self, game_time, penalty_score):
-        AbstractPlayer.__init__(self, game_time, penalty_score) # keep the inheritance of the parent's (AbstractPlayer) __init__()
-        #TODO: initialize more fields, if needed, and the AlphaBeta algorithm from SearchAlgos.py
+        AbstractPlayer.__init__(self, game_time,
+                                penalty_score)  # keep the inheritance of the parent's (AbstractPlayer) __init__()
+        # TODO: initialize more fields, if needed, and the AlphaBeta algorithm from SearchAlgos.py
         self.alpha = ALPHA_VALUE_INIT
         self.beta = BETA_VALUE_INIT
         self.pos = None
+        self.opp_pos = None
         self.state = None
 
     def set_game_params(self, board):
@@ -33,8 +37,10 @@ class Player(AbstractPlayer):
         """
         # erase the following line and implement this function.
         pos = np.where(board == 1)
+        opp_pos = np.where(board == 2)
         # convert pos to tuple of ints
         self.pos = tuple(ax[0] for ax in pos)
+        self.opp_pos = tuple(ax[0] for ax in opp_pos)
         players_score_init = [0, 0]
         self.state = State(board, players_score_init, 1)
 
@@ -48,15 +54,14 @@ class Player(AbstractPlayer):
         self.state.set_start_time(time.time())
         self.state.set_time_limit(time_limit)
         alphabeta = AlphaBeta(self.utility_f, self.succ_f, self.perform_move_f, self.state.players_score,
-                          goal=self.goal_f, heuristic_f=self.heuristic_f)
-
-        move = None
+                              goal=self.goal_f, heuristic_f=self.heuristic_f)
         minimax_val = float('-inf')
-        depth = 1
+        depth = 0
         children = self.succ_f(self.state, self.pos)
-        tribal_point = 1
+        move = children[0]
+        res_for_prev_depth = 0
+        tribal_point = 0
         if len(children) == 1:
-            move = children[0]
             new_pos = (self.pos[0] + move[0], self.pos[1] + move[1])
             self.state.players_score[0] += self.state.board[new_pos]
             self.state.board[self.pos] = -1
@@ -64,34 +69,36 @@ class Player(AbstractPlayer):
             self.pos = new_pos
             return move
         while True:
+            state_copy = copy.deepcopy(self.state)
+            res = -1
             for op in children:
-                state_copy = copy.deepcopy(self.state)
                 new_pos = (self.pos[0] + op[0], self.pos[1] + op[1])
                 prev_val = state_copy.board[new_pos]
                 assert prev_val not in [-1, -2, 1, 2]
                 self.perform_move_f(state_copy, op, self.pos)
-                # res = alphabeta.search(state_copy, depth, True)
                 res = alphabeta.search(state_copy, depth, ALPHA_VALUE_INIT, BETA_VALUE_INIT, True)
-                if res == -2 or move is None:
-                    move = op if move is None else move
-                    # update local board and pos
-                    new_pos = (self.pos[0] + move[0], self.pos[1] + move[1])
-                    self.state.players_score[0] += self.state.board[new_pos]
-                    self.state.board[self.pos] = -1
-                    self.state.board[new_pos] = 1
-                    self.pos = new_pos
-                    return move
                 if res > minimax_val:
                     minimax_val = res
                     move = op
                 self.perform_move_f(state_copy, op, new_pos, prev_val)
                 assert len(state_copy.get_indexs_by_cond(lambda x: x == 2)) == 1
                 assert len(state_copy.get_indexs_by_cond(lambda x: x == 1)) == 1
-                depth += 1
-            tribal_point = minimax_val / tribal_point if not np.math.isnan(minimax_val) and not np.math.isnan(
-                tribal_point) else 1
-            if abs(tribal_point) - 1 < 0.01:
+            # print('##########################################################')
+            # print(f'for depth - {depth} max val - {minimax_val} move - {move}')
+            if res == 0 or res_for_prev_depth == res:
+                tribal_point += 1
+                if tribal_point == 3:
+                    break
+            res_for_prev_depth = res
+            depth += 1
+            if state_copy.get_time_left() < 0.7:
+                # print(f'move decided = {move} with val = {minimax_val}')
                 break
+
+        # update local board and pos
+        self.perform_move_f(self.state, move, self.pos)
+        self.pos = (self.pos[0] + move[0], self.pos[1] + move[1])
+        return move
 
         # update local board and pos
         new_pos = (self.pos[0] + move[0], self.pos[1] + move[1]) if move is not None else self.pos
@@ -108,9 +115,11 @@ class Player(AbstractPlayer):
         No output is expected
         """
         # erase the following line and implement this function.
-        self.state.board[self.state.get_indexs_by_cond(lambda x: x == 2)[0]] = -1
+        assert self.state.board[pos] not in [1, 2, -1]
+        self.state.board[self.opp_pos] = -1
         self.state.players_score[1] += self.state.board[pos]
         self.state.board[pos] = 2
+        self.opp_pos = pos
 
     def update_fruits(self, fruits_on_board_dict):
         """Update your info on the current fruits on board (if needed).
@@ -152,29 +161,29 @@ class Player(AbstractPlayer):
         return avail_op
 
     # gets an op and moves the player accroding to this op, prev_val will be passed before recursic call
-    def perform_move_f(self, state, op, pos, prev_val=-2):
+    @staticmethod
+    def perform_move_f(state, op, curr_pos_on_board, prev_val=-2):
         assert len(state.get_indexs_by_cond(lambda x: x == 2)) == 1
         assert len(state.get_indexs_by_cond(lambda x: x == 1)) == 1
-        player_id = state.board[pos]
-        if prev_val == -2:
-            state.board[pos] = -1
-            new_pos = (pos[0] + op[0], pos[1] + op[1])
+        state.turn_counter += 1 if prev_val == -2 else -1
+        player_id = state.board[curr_pos_on_board]
+        assert player_id in [1, 2]
+        if prev_val == -2:  # forward
+            state.board[curr_pos_on_board] = -1
+            new_pos = (curr_pos_on_board[0] + op[0], curr_pos_on_board[1] + op[1])
             val_next_cell = state.board[new_pos[0]][new_pos[1]]
             state.players_score[int(player_id) - 1] += int(val_next_cell)
             state.board[new_pos] = player_id
-        else:
+        else:  # backwards
             assert prev_val not in [1, 2]
-            state.board[pos[0], pos[1]] = prev_val
-            if player_id not in [1, 2]:
-                print(player_id)
+            state.board[curr_pos_on_board] = prev_val
+            last_pos = (curr_pos_on_board[0] - op[0], curr_pos_on_board[1] - op[1])
             state.players_score[int(player_id) - 1] -= prev_val
-            last_pos = (pos[0] - op[0], pos[1] - op[1])
             state.board[last_pos] = player_id
         assert len(state.get_indexs_by_cond(lambda x: x == 2)) == 1
         assert len(state.get_indexs_by_cond(lambda x: x == 1)) == 1
-        return state
 
-    def heuristic_f(self, state, pos):
+    def heuristic_f(self, state):
         # print('***************************************************')
         board_len = len(state.board)
         player_id = self.state.board[self.pos]
@@ -284,4 +293,3 @@ class Player(AbstractPlayer):
             if not opp_cant_move:
                 return True
         return False
-

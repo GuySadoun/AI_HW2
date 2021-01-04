@@ -87,6 +87,7 @@ class AlphaBeta(SearchAlgos):
 
     def search(self, state, depth, maximizing_player, alpha=ALPHA_VALUE_INIT, beta=BETA_VALUE_INIT, is_root=False):
         """Start the AlphaBeta algorithm.
+        :param is_root: is it first call
         :param state: The state to start from.
         :param depth: The maximum allowed depth for the algorithm.
         :param maximizing_player: Whether this is a max node (True) or a min node (False).
