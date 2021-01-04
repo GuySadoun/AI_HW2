@@ -49,16 +49,20 @@ class MiniMax(SearchAlgos):
             for op in self.succ(state, pos):
                 next_cell = (pos[0] + op[0], pos[1] + op[1])
                 prev_val = state.board[next_cell]
-                new_state = self.perform_move(state, op, pos)
-                res = self.search(new_state, depth - 1, not maximizing_player)
+                self.perform_move(state, op, pos)
+                res = self.search(state, depth - 1, not maximizing_player)
                 if res == -2 and not is_root:
+                    self.perform_move(state, op, next_cell, prev_val)  # reversed operator
                     return res  # Interrupted
-                elif is_root:
-                    return curr_max
                 if res > curr_max:
                     curr_max = res
+                elif is_root:
+                    state.print_board()
+                    self.perform_move(state, op, next_cell, prev_val)  # reversed operator
+                    return curr_max
                 self.perform_move(state, op, next_cell, prev_val)  # reversed operator
-                if state.get_time_left() < 0.6:
+                time_left = state.get_time_left()
+                if time_left < 0.6:
                     return -2  # Interrupted
             return curr_max
         else:
@@ -66,9 +70,10 @@ class MiniMax(SearchAlgos):
             for op in self.succ(state, pos):
                 next_cell = (pos[0] + op[0], pos[1] + op[1])
                 prev_val = state.board[next_cell]
-                new_state = self.perform_move(state, op, pos)
-                res = self.search(new_state, depth - 1, not maximizing_player)
+                self.perform_move(state, op, pos)
+                res = self.search(state, depth - 1, not maximizing_player)
                 if res == -2:
+                    self.perform_move(state, op, next_cell, prev_val)
                     return res  # Interrupted
                 if res < curr_min:
                     curr_min = res
