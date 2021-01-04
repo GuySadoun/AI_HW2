@@ -17,6 +17,7 @@ class Player(AbstractPlayer):
     def __init__(self, game_time, penalty_score):
         AbstractPlayer.__init__(self, game_time,
                                 penalty_score)  # keep the inheritance of the parent's (AbstractPlayer) __init__()
+        self.game_time = game_time
         self.start_global_time = 0
         self.turn_counter = 0
         self.alpha = ALPHA_VALUE_INIT
@@ -64,7 +65,7 @@ class Player(AbstractPlayer):
         alphabeta = AlphaBeta(self.utility_f, self.succ_f, self.perform_move_f, self.state.players_score,
                               goal=self.goal_f, heuristic_f=self.heuristic_f)
 
-        minimax_val = float('-inf')
+        ab_val = float('-inf')
         depth = 0
         children = self.succ_f(self.state, self.pos)
         move = children[0]
@@ -80,16 +81,18 @@ class Player(AbstractPlayer):
             return move
         while True:
             state_copy = copy.deepcopy(self.state)
-            res = -1
+            res = 0
             for op in children:
                 state_copy.set_time_limit(current_time_slice / len(children))
                 new_pos = (self.pos[0] + op[0], self.pos[1] + op[1])
                 prev_val = state_copy.board[new_pos]
                 assert prev_val not in [-1, -2, 1, 2]
                 self.perform_move_f(state_copy, op, self.pos)
-                res = alphabeta.search(state_copy, depth, ALPHA_VALUE_INIT, BETA_VALUE_INIT, True)
-                if res == -2 or move is None:
-                    move = op if move is None else move
+                if state_copy.players_score[0] - self.state.players_score[0] > 0:
+                    move = op
+                res = alphabeta.search(state_copy, depth, False, ALPHA_VALUE_INIT, BETA_VALUE_INIT, True)
+                if res == -2:
+                    move = op
                     # update local board and pos
                     new_pos = (self.pos[0] + move[0], self.pos[1] + move[1])
                     self.state.players_score[0] += self.state.board[new_pos]
@@ -97,14 +100,10 @@ class Player(AbstractPlayer):
                     self.state.board[new_pos] = 1
                     self.pos = new_pos
                     return move
-                if res > minimax_val:
-                    minimax_val = res
+                if res > ab_val:
+                    ab_val = res
                     move = op
                 self.perform_move_f(state_copy, op, new_pos, prev_val)
-                assert len(state_copy.get_indexs_by_cond(lambda x: x == 2)) == 1
-                assert len(state_copy.get_indexs_by_cond(lambda x: x == 1)) == 1
-                depth += 1
-            assert res != -1
             if res == 0 or res_for_prev_depth == res:
                 tribal_point += 1
                 if tribal_point == 3:
@@ -112,7 +111,7 @@ class Player(AbstractPlayer):
             res_for_prev_depth = res
             depth += 1
             if state_copy.get_time_left() < 0.6:
-                # print(f'move decided = {move} with val = {minimax_val}')
+                # print(f'move decided = {move} with val = {ab_val}')
                 break
 
         # update local board and pos
@@ -183,7 +182,8 @@ class Player(AbstractPlayer):
         return avail_op
 
     # gets an op and moves the player according to this op, prev_val will be passed before recursic call
-    def perform_move_f(self, state, op, curr_pos_on_board, prev_val=-2):
+    @staticmethod
+    def perform_move_f(state, op, curr_pos_on_board, prev_val=-2):
         state.turn_counter += 1 if prev_val == -2 else -1
         player_id = state.board[curr_pos_on_board]
         # assert player_id in [1, 2]

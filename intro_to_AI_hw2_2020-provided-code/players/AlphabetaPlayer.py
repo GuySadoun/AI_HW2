@@ -181,7 +181,7 @@ class Player(AbstractPlayer):
         # assert len(state.get_indexs_by_cond(lambda x: x == 1)) == 1
 
     def heuristic_f(self, state):
-        # print('***************************************************')
+        print('***************************************************')
         board_len = len(state.board)
         player_id = self.state.board[self.pos]
         opponent_id = player_id % 2 + 1
@@ -269,9 +269,9 @@ class Player(AbstractPlayer):
                 v1 = min(reachable_for_me_for_state / reachable_for_me_for_game, 1)
                 h_val = (1 / 2) * v1
 
-        # print(f'strategy = {strategy}')
-        # print(f'heuristic_f - val: {h_val}')
-        # print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+        print(f'strategy = {strategy}')
+        print(f'heuristic_f - val: {"%.2f" % h_val}')
+        print('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
         return h_val
 
     def goal_f(self, state, pos):

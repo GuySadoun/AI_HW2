@@ -51,15 +51,11 @@ class MiniMax(SearchAlgos):
                 prev_val = state.board[next_cell]
                 self.perform_move(state, op, pos)
                 res = self.search(state, depth - 1, not maximizing_player)
-                if res == -2 and not is_root:
-                    self.perform_move(state, op, next_cell, prev_val)  # reversed operator
+                if res == -2:
+                    self.perform_move(state, op, next_cell, prev_val)
                     return res  # Interrupted
                 if res > curr_max:
                     curr_max = res
-                elif is_root:
-                    state.print_board()
-                    self.perform_move(state, op, next_cell, prev_val)  # reversed operator
-                    return curr_max
                 self.perform_move(state, op, next_cell, prev_val)  # reversed operator
                 time_left = state.get_time_left()
                 if time_left < 0.6:
@@ -73,8 +69,12 @@ class MiniMax(SearchAlgos):
                 self.perform_move(state, op, pos)
                 res = self.search(state, depth - 1, not maximizing_player)
                 if res == -2:
-                    self.perform_move(state, op, next_cell, prev_val)
-                    return res  # Interrupted
+                    if not is_root:
+                        self.perform_move(state, op, next_cell, prev_val)  # reversed operator
+                        return res  # Interrupted
+                    elif is_root:
+                        self.perform_move(state, op, next_cell, prev_val)  # reversed operator
+                        return curr_min
                 if res < curr_min:
                     curr_min = res
                 self.perform_move(state, op, next_cell, prev_val)  # reversed operator
@@ -107,19 +107,16 @@ class AlphaBeta(SearchAlgos):
                 prev_val = state.board[next_cell]
                 self.perform_move(state, op, pos)
                 res = self.search(state, depth - 1, not maximizing_player, alpha, beta)
-                if res == -2 and not is_root:
+                if res == -2:
                     self.perform_move(state, op, next_cell, prev_val)  # reversed operator
                     return res  # Interrupted
                 if res > curr_max:
                     curr_max = res
-                elif is_root:
-                    state.print_board()
-                    self.perform_move(state, op, next_cell, prev_val)  # reversed operator
-                    return curr_max
                 self.perform_move(state, op, next_cell, prev_val)  # reversed operator
                 # start alpha beta adaption:
                 alpha = max(curr_max, alpha)
                 if curr_max >= beta:
+                    print(f'curr max = {curr_max} beta = {beta}')
                     return float('inf')
                 # end alpha beta adaption
                 if state.get_time_left() < 0.6:
@@ -133,11 +130,17 @@ class AlphaBeta(SearchAlgos):
                 self.perform_move(state, op, pos)
                 res = self.search(state, depth - 1, not maximizing_player, alpha, beta)
                 if res == -2:
-                    self.perform_move(state, op, next_cell, prev_val)
-                    return res  # Interrupted
+                    ret = res if is_root else curr_min
+                    self.perform_move(state, op, next_cell, prev_val)  # reversed operator
+                    return ret
                 if res < curr_min:
                     curr_min = res
                 self.perform_move(state, op, next_cell, prev_val)  # reversed operator
+                # start alpha beta adaption:
+                beta = min(curr_min, beta)
+                if curr_min <= alpha:
+                    return float('-inf')
+                # end alpha beta adaption
                 if state.get_time_left() < 0.6:
                     return -2  # Interrupted
             return curr_min
