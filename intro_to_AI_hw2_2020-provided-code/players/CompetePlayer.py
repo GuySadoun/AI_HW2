@@ -6,6 +6,7 @@ import time
 import numpy as np
 
 import utils
+from Game import Game
 from SearchAlgos import AlphaBeta
 from players.AbstractPlayer import AbstractPlayer
 from players.MinimaxPlayer import State
@@ -89,7 +90,8 @@ class Player(AbstractPlayer):
                 assert prev_val not in [-1, -2, 1, 2]
                 self.perform_move_f(state_copy, op, self.pos)
                 if state_copy.players_score[0] - self.state.players_score[0] > 0:
-                    move = op
+                    ab_val = (state_copy.players_score[0] - self.state.players_score[0] / self.penalty_score + 50)
+                    move = op  # just in case
                 res = alphabeta.search(state_copy, depth, False, ALPHA_VALUE_INIT, BETA_VALUE_INIT, True)
                 if res > ab_val:
                     ab_val = res
@@ -266,17 +268,7 @@ class Player(AbstractPlayer):
                     v7 = 1
                 else:
                     v7 = 0
-                list_d = [v1, v2, v3, v4, v5, v6, v7]
-                count = 0
-                for v in list_d:
-                    count += 1
-                    assert v <= 1
                 h_val = (1 / 10) * (v1 + v2 + v3 + v4 + v6) + (1 / 4) * v5 + (1 / 4) * v7
-                if h_val > 1:
-                    for v in list_d:
-                        count += 1
-                        assert v <= 1
-                        # print(f'v{count} = {v}')
                 h_val *= 0.8
             else:  # staying alive strategy - maximum h_val is 0.5
                 strategy = 'SURVIVE!'

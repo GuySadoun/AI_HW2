@@ -369,24 +369,14 @@ class Player(AbstractPlayer):
                     v7 = 1
                 else:
                     v7 = 0
-                list_d = [v1, v2, v3, v4, v5, v6, v7]
-                count = 0
-                for v in list_d:
-                    count += 1
-                    assert v <= 1
                 h_val = (1 / 10) * (v1 + v2 + v3 + v4 + v6) + (1 / 4) * v5 + (1 / 4) * v7
-                if h_val > 1:
-                    for v in list_d:
-                        count += 1
-                        assert v <= 1
-                        print(f'v{count} = {v}')
                 h_val *= 0.8
             else:                                                               # staying alive strategy - maximum h_val is 0.5
                 strategy = 'SURVIVE!'
                 reachable_for_me_for_game = self.state.reachable_white_cells(player_id)
                 assert reachable_for_me_for_game > 0
                 v1 = min(reachable_for_me_for_state / reachable_for_me_for_game, 1)
-                h_val = 0.5 * v1
+                h_val = (1 / 2) * v1
 
         # print(f'strategy = {strategy}')
         # print(f'heuristic_f - val: {h_val}')

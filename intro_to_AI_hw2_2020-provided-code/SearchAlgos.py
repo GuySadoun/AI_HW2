@@ -116,7 +116,7 @@ class AlphaBeta(SearchAlgos):
                 # start alpha beta adaption:
                 alpha = max(curr_max, alpha)
                 if curr_max >= beta:
-                    print(f'curr max = {curr_max} beta = {beta}')
+                    # print(f'curr max = {curr_max} beta = {beta}')
                     return float('inf')
                 # end alpha beta adaption
                 if state.get_time_left() < 0.6:
