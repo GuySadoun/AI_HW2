@@ -3,17 +3,30 @@ from GameWrapper import GameWrapper
 import os, sys
 import utils
 
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+def get_winner(gameWrapper, player_index):
+    if player_index and gameWrapper.some_player_cant_move:
+        score_1, score_2 = gameWrapper.game.get_players_scores()
+        if score_1 != score_2:
+            winning_player = int(score_2 > score_1) + 1
+            return winning_player
+    return -1 # represents tie
+
 if __name__ == "__main__":
     players_options = [x+'Player' for x in ['Live', 'Simple', 'Minimax', 'Alphabeta', 'GlobalTimeAB', 'LightAB',
                                             'HeavyAB', 'Compete']]
 
     parser = argparse.ArgumentParser()
     
-    parser.add_argument('-player1', default='SimplePlayer', type=str,
+    parser.add_argument('-player1', default='MinimaxPlayer', type=str,
                         help='The type of the first player.',
                         choices=players_options)
     #SimplePlayer
-    parser.add_argument('-player2', default='MinimaxPlayer',  type=str,
+    parser.add_argument('-player2', default='AlphabetaPlayer',  type=str,
                         help='The type of the second player.',
                         choices=players_options)
     
@@ -81,3 +94,53 @@ if __name__ == "__main__":
     
     # start playing!
     game.start_game()
+
+    for experiment in range(1, 3):
+        HeavyABplayer_search_depth = 3 - (experiment - 1)
+        print('Experiment'+experiment+': HeavyABplayer_search_depth is'+HeavyABplayer_search_depth)
+        grades_list = []
+        depth_differences_list = []
+        for level_i in range(1, 4):
+            lightABplayer_depth = level_i - 1 + HeavyABplayer_search_depth
+            depth_differences_list.append(lightABplayer_depth-HeavyABplayer_search_depth)
+            current_level_wins = 0
+            for game in range(1, 6):
+                player_1_type = 'players.LightABPlayer'
+                player_2_type = 'players.HeavyABPlayer'
+                player_1 = sys.modules[player_1_type].Player(game_time, penalty_score)
+                player_2 = sys.modules[player_2_type].Player(game_time, penalty_score)
+
+                current_game_wrapper = GameWrapper(board[0], board[1], board[2], player_1=player_1, player_2=player_2,
+                                   terminal_viz=args.terminal_viz,
+                                   print_game_in_terminal=not args.dont_print_game,
+                                   # terminal_viz=False,
+                                   # print_game_in_terminal=False,
+                                   time_to_make_a_move=args.move_time,
+                                   game_time=game_time,
+                                   penalty_score=args.penalty_score,
+                                   max_fruit_score=args.max_fruit_score,
+                                   max_fruit_time=args.max_fruit_time)
+
+                # start playing!
+                current_game_wrapper.start_game()
+                winner_number = get_winner(current_game_wrapper)
+                current_level_wins += int(winner_number == 2)
+            current_level_grade = current_level_wins / 5
+            grades_list.append(current_level_grade)
+
+        print('Experiment '+experiment+' graph:')
+        # draw graph with x as depth_differences_list and y as grades_list
+
+        # Data for plotting
+        # t = np.arange(0.0, 2.0, 0.01)
+        # s = 1 + np.sin(2 * np.pi * t)
+
+        fig, ax = plt.subplots()
+        ax.plot(grades_list, depth_differences_list)
+
+        ax.set(xlabel='Depth Difference', ylabel='Grade',
+               title='Grade as a function of Depth Difference')
+        ax.grid()
+
+        fig.savefig("test.png")
+        plt.show()
