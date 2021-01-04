@@ -103,18 +103,16 @@ class AlphaBeta(SearchAlgos):
             return val
         if maximizing_player:
             curr_max = float('-inf')  # minus infinity
-
-            # children_randomed = self.succ(state, pos).copy()
-            # random.shuffle(children_randomed)
-            # for op in children_randomed:
             for op in self.succ(state, pos):
                 next_cell = (pos[0] + op[0], pos[1] + op[1])
                 prev_val = state.board[next_cell]
-                new_state = self.perform_move(state, op, pos)
-                res = self.search(new_state, depth - 1, not maximizing_player, alpha, beta)
+                self.perform_move(state, op, pos)
+                res = self.search(state, depth - 1, not maximizing_player, alpha, beta)
                 if res == -2 and not is_root:
+                    self.perform_move(state, op, next_cell, prev_val)  # reversed operator
                     return res  # Interrupted
                 elif is_root:
+                    self.perform_move(state, op, next_cell, prev_val)  # reversed operator
                     return curr_max
                 if res > curr_max:
                     curr_max = res
@@ -132,9 +130,10 @@ class AlphaBeta(SearchAlgos):
             for op in self.succ(state, pos):
                 next_cell = (pos[0] + op[0], pos[1] + op[1])
                 prev_val = state.board[next_cell]
-                new_state = self.perform_move(state, op, pos)
-                res = self.search(new_state, depth - 1, not maximizing_player, alpha, beta)
+                self.perform_move(state, op, pos)
+                res = self.search(state, depth - 1, not maximizing_player, alpha, beta)
                 if res == -2:
+                    self.perform_move(state, op, next_cell, prev_val)  # reversed operator
                     return res  # Interrupted
                 if res < curr_min:
                     curr_min = res
