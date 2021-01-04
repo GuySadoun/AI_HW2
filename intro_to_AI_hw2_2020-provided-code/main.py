@@ -3,6 +3,19 @@ from GameWrapper import GameWrapper
 import os, sys
 import utils
 
+# import matplotlib
+# import numpy as np
+import matplotlib.pyplot as plt
+
+
+def get_winner(gameWrapper, player_index):
+    if player_index and gameWrapper.some_player_cant_move:
+        score_1, score_2 = gameWrapper.game.get_players_scores()
+        if score_1 != score_2:
+            winning_player = int(score_2 > score_1) + 1
+            return winning_player
+    return -1 # represents tie
+
 if __name__ == "__main__":
     players_options = [x+'Player' for x in ['Live', 'Simple', 'Minimax', 'Alphabeta', 'GlobalTimeAB', 'LightAB',
                                             'HeavyAB', 'Compete']]
@@ -98,10 +111,10 @@ if __name__ == "__main__":
                 player_2 = sys.modules[player_2_type].Player(game_time, penalty_score)
 
                 current_game_wrapper = GameWrapper(board[0], board[1], board[2], player_1=player_1, player_2=player_2,
-                                   terminal_viz=args.terminal_viz,
-                                   print_game_in_terminal=not args.dont_print_game,
-                                   # terminal_viz=False,
-                                   # print_game_in_terminal=False,
+                                   # terminal_viz=args.terminal_viz,
+                                   # print_game_in_terminal=not args.dont_print_game,
+                                   terminal_viz=False,
+                                   print_game_in_terminal=False,
                                    time_to_make_a_move=args.move_time,
                                    game_time=game_time,
                                    penalty_score=args.penalty_score,
@@ -118,10 +131,10 @@ if __name__ == "__main__":
         print('Experiment '+experiment+' graph:')
         # draw graph with x as depth_differences_list and y as grades_list
 
-        # Data for plotting
         # t = np.arange(0.0, 2.0, 0.01)
         # s = 1 + np.sin(2 * np.pi * t)
 
+        # Data for plotting
         fig, ax = plt.subplots()
         ax.plot(grades_list, depth_differences_list)
 
@@ -129,5 +142,5 @@ if __name__ == "__main__":
                title='Grade as a function of Depth Difference')
         ax.grid()
 
-        fig.savefig("test.png")
+        fig.savefig('experiment'+experiment+'.png")
         plt.show()
