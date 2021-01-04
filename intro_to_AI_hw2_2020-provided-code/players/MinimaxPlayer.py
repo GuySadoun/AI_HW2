@@ -283,11 +283,11 @@ class Player(AbstractPlayer):
     # gets an op and moves the player according to this op, prev_val will be passed before recursive call
     @staticmethod
     def perform_move_f(state, op, curr_pos_on_board, prev_val=-2):
-        assert len(state.get_indexs_by_cond(lambda x: x == 2)) == 1
-        assert len(state.get_indexs_by_cond(lambda x: x == 1)) == 1
+        # assert len(state.get_indexs_by_cond(lambda x: x == 2)) == 1
+        # assert len(state.get_indexs_by_cond(lambda x: x == 1)) == 1
         state.turn_counter += 1 if prev_val == -2 else -1
         player_id = state.board[curr_pos_on_board]
-        assert player_id in [1, 2]
+        # assert player_id in [1, 2]
         if prev_val == -2:  # forward
             state.board[curr_pos_on_board] = -1
             new_pos = (curr_pos_on_board[0] + op[0], curr_pos_on_board[1] + op[1])
@@ -300,8 +300,8 @@ class Player(AbstractPlayer):
             last_pos = (curr_pos_on_board[0] - op[0], curr_pos_on_board[1] - op[1])
             state.players_score[int(player_id) - 1] -= prev_val
             state.board[last_pos] = player_id
-        assert len(state.get_indexs_by_cond(lambda x: x == 2)) == 1
-        assert len(state.get_indexs_by_cond(lambda x: x == 1)) == 1
+        # assert len(state.get_indexs_by_cond(lambda x: x == 2)) == 1
+        # assert len(state.get_indexs_by_cond(lambda x: x == 1)) == 1
 
     def heuristic_f(self, state):
         # print('***************************************************')
