@@ -3,19 +3,6 @@ from GameWrapper import GameWrapper
 import os, sys
 import utils
 
-import matplotlib
-import matplotlib.pyplot as plt
-import numpy as np
-
-
-def get_winner(gameWrapper, player_index):
-    if player_index and gameWrapper.some_player_cant_move:
-        score_1, score_2 = gameWrapper.game.get_players_scores()
-        if score_1 != score_2:
-            winning_player = int(score_2 > score_1) + 1
-            return winning_player
-    return -1 # represents tie
-
 if __name__ == "__main__":
     players_options = [x+'Player' for x in ['Live', 'Simple', 'Minimax', 'Alphabeta', 'GlobalTimeAB', 'LightAB',
                                             'HeavyAB', 'Compete']]
