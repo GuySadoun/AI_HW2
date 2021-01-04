@@ -87,6 +87,7 @@ class AlphaBeta(SearchAlgos):
 
     def search(self, state, depth, maximizing_player, alpha=ALPHA_VALUE_INIT, beta=BETA_VALUE_INIT, is_root=False):
         """Start the AlphaBeta algorithm.
+        :param is_root: is it first call
         :param state: The state to start from.
         :param depth: The maximum allowed depth for the algorithm.
         :param maximizing_player: Whether this is a max node (True) or a min node (False).
@@ -98,32 +99,30 @@ class AlphaBeta(SearchAlgos):
         if self.goal(state, pos):
             return self.utility(state.players_score, maximizing_player)
         if depth == 0:
-            val = self.h(state, pos)
-            return val
+            return self.h(state)
         if maximizing_player:
             curr_max = float('-inf')  # minus infinity
-
-            # children_randomed = self.succ(state, pos).copy()
-            # random.shuffle(children_randomed)
-            # for op in children_randomed:
             for op in self.succ(state, pos):
                 next_cell = (pos[0] + op[0], pos[1] + op[1])
                 prev_val = state.board[next_cell]
-                new_state = self.perform_move(state, op, pos)
-                res = self.search(new_state, depth - 1, not maximizing_player, alpha, beta)
+                self.perform_move(state, op, pos)
+                res = self.search(state, depth - 1, not maximizing_player, alpha, beta)
                 if res == -2 and not is_root:
+                    self.perform_move(state, op, next_cell, prev_val)  # reversed operator
                     return res  # Interrupted
-                elif is_root:
-                    return curr_max
                 if res > curr_max:
                     curr_max = res
+                elif is_root:
+                    state.print_board()
+                    self.perform_move(state, op, next_cell, prev_val)  # reversed operator
+                    return curr_max
                 self.perform_move(state, op, next_cell, prev_val)  # reversed operator
                 # start alpha beta adaption:
                 alpha = max(curr_max, alpha)
                 if curr_max >= beta:
                     return float('inf')
                 # end alpha beta adaption
-                if state.get_time_left() < 0.7:
+                if state.get_time_left() < 0.6:
                     return -2  # Interrupted
             return curr_max
         else:
@@ -131,18 +130,15 @@ class AlphaBeta(SearchAlgos):
             for op in self.succ(state, pos):
                 next_cell = (pos[0] + op[0], pos[1] + op[1])
                 prev_val = state.board[next_cell]
-                new_state = self.perform_move(state, op, pos)
-                res = self.search(new_state, depth - 1, not maximizing_player, alpha, beta)
+                self.perform_move(state, op, pos)
+                res = self.search(state, depth - 1, not maximizing_player, alpha, beta)
                 if res == -2:
+                    self.perform_move(state, op, next_cell, prev_val)
                     return res  # Interrupted
                 if res < curr_min:
                     curr_min = res
                 self.perform_move(state, op, next_cell, prev_val)  # reversed operator
-                # start alpha beta adaption:
-                beta = min(curr_min, beta)
-                if curr_min <= alpha:
-                    return float('-inf')
-                # end alpha beta adaption
-                if state.get_time_left() < 0.7:
+                if state.get_time_left() < 0.6:
                     return -2  # Interrupted
             return curr_min
+

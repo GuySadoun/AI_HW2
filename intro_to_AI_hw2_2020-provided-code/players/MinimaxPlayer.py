@@ -208,10 +208,10 @@ class Player(AbstractPlayer):
                     minimax_val = res
                     move = op
                 self.perform_move_f(state_copy, op, new_pos, prev_val)
-                assert len(state_copy.get_indexs_by_cond(lambda x: x == 2)) == 1
-                assert len(state_copy.get_indexs_by_cond(lambda x: x == 1)) == 1
-            print('##########################################################')
-            print(f'for depth - {depth} max val - {minimax_val} move - {move}')
+                # assert len(state_copy.get_indexs_by_cond(lambda x: x == 2)) == 1
+                # assert len(state_copy.get_indexs_by_cond(lambda x: x == 1)) == 1
+            # print('##########################################################')
+            # print(f'for depth - {depth} max val - {minimax_val} move - {move}')
             if res == 0 or res_for_prev_depth == res:
                 tribal_point += 1
                 if tribal_point == 3:
@@ -296,11 +296,6 @@ class Player(AbstractPlayer):
         assert len(state.get_indexs_by_cond(lambda x: x == 1)) == 1
         state.turn_counter += 1 if prev_val == -2 else -1
         player_id = state.board[curr_pos_on_board]
-        if player_id not in [1, 2]:
-            print(player_id)
-            state.print_board()
-            for line in traceback.format_stack():
-                print(line.strip())
         assert player_id in [1, 2]
         if prev_val == -2:  # forward
             state.board[curr_pos_on_board] = -1
@@ -314,11 +309,6 @@ class Player(AbstractPlayer):
             last_pos = (curr_pos_on_board[0] - op[0], curr_pos_on_board[1] - op[1])
             state.players_score[int(player_id) - 1] -= prev_val
             state.board[last_pos] = player_id
-        if len(state.get_indexs_by_cond(lambda x: x == 2)) != 1 or \
-                len(state.get_indexs_by_cond(lambda x: x == 1)) != 1 or prev_val in [1, 2, -1]:
-            state.print_board()
-            for line in traceback.format_stack():
-                print(line.strip())
         assert len(state.get_indexs_by_cond(lambda x: x == 2)) == 1
         assert len(state.get_indexs_by_cond(lambda x: x == 1)) == 1
 
