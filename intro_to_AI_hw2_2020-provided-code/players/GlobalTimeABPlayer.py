@@ -11,12 +11,13 @@ from players.AbstractPlayer import AbstractPlayer
 from players.MinimaxPlayer import State
 from players.MinimaxPlayer import pos_feasible_on_board
 from utils import ALPHA_VALUE_INIT, BETA_VALUE_INIT
-#TODO: you can import more modules, if needed
+
 
 class Player(AbstractPlayer):
     def __init__(self, game_time, penalty_score):
-        AbstractPlayer.__init__(self, game_time, penalty_score) # keep the inheritance of the parent's (AbstractPlayer) __init__()
-        #TODO: initialize more fields, if needed, and the AlphaBeta algorithm from SearchAlgos.py
+        AbstractPlayer.__init__(self, game_time,
+                                penalty_score)  # keep the inheritance of the parent's (AbstractPlayer) __init__()
+        # TODO: initialize more fields, if needed, and the AlphaBeta algorithm from SearchAlgos.py
         self.start_global_time = 0
         self.turn_counter = 0
         self.alpha = ALPHA_VALUE_INIT
@@ -41,7 +42,6 @@ class Player(AbstractPlayer):
         self.state = State(board, players_score_init, 1)
         self.state.set_start_time(time.time())
 
-
     def time_slice(self):
         player_id = self.state.board[self.pos]
         time_passed = self.start_global_time - time.time()
@@ -53,9 +53,8 @@ class Player(AbstractPlayer):
         # regular time method:
         number_of_reachable_slots = self.state.reachable_white_cells(player_id)
         current_possible_turns = np.ceil(number_of_reachable_slots)
-        time_frame = current_time_left/current_possible_turns
+        time_frame = current_time_left / current_possible_turns
         return time_frame
-
 
     def make_move(self, time_limit, players_score):
         """Make move with this Player.
@@ -69,7 +68,7 @@ class Player(AbstractPlayer):
 
         self.turn_counter += 1
         alphabeta = AlphaBeta(self.utility_f, self.succ_f, self.perform_move_f, self.state.players_score,
-                          goal=self.goal_f, heuristic_f=self.heuristic_f)
+                              goal=self.goal_f, heuristic_f=self.heuristic_f)
 
         move = None
         minimax_val = float('-inf')
@@ -87,7 +86,7 @@ class Player(AbstractPlayer):
         while True:
             if self.turn_counter <= len(self.state.board[0]):
                 # eating_fruit time method:
-                if depth > (len(self.state.board[0])-self.turn_counter+1):
+                if depth > (len(self.state.board[0]) - self.turn_counter + 1):
                     return move
             for op in children:
                 self.state.set_time_limit(current_time_slice / len(children))
@@ -209,7 +208,7 @@ class Player(AbstractPlayer):
         board_len = len(state.board[0])
         player_id = self.state.board[self.pos]
         opponent_id = player_id % 2 + 1
-        is_leading = state.players_score[int(player_id-1)] - state.players_score[int(opponent_id-1)] > 0
+        is_leading = state.players_score[int(player_id - 1)] - state.players_score[int(opponent_id - 1)] > 0
         opp_pos = state.get_indexs_by_cond(lambda x: x == opponent_id)[0]
         option_for_op = state.state_options(opp_pos)
         option_for_me = state.state_options(pos)
@@ -249,7 +248,7 @@ class Player(AbstractPlayer):
             v3 = (1 / 3) * option_for_me
             v4 = 1 if is_leading else 0  # if opp is winning give more weight to fruit
             v5 = (
-                             closest_md_for_me - closest_md_for_opp) / board_len if closest_md_for_opp != 0 else closest_md_for_me / board_len
+                         closest_md_for_me - closest_md_for_opp) / board_len if closest_md_for_opp != 0 else closest_md_for_me / board_len
             v6 = (closest_md_for_me / self.penalty_score + (closest_val / 300)) / 2
             h_val = (1 / 8) * (v2 + v3 + v5) + (2 / 8) * (v1 + v4) + (4 / 8) * v6
         else:
