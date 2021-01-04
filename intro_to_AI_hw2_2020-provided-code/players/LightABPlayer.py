@@ -18,8 +18,7 @@ from utils import ALPHA_VALUE_INIT, BETA_VALUE_INIT
 
 class Player(AbstractPlayer):
     def __init__(self, game_time, penalty_score, depth):
-        AbstractPlayer.__init__(self, game_time,
-                                penalty_score)  # keep the inheritance of the parent's (AbstractPlayer) __init__()
+        AbstractPlayer.__init__(self, game_time, penalty_score)  # keep the inheritance of the parent's (AbstractPlayer) __init__()
         # TODO: initialize more fields, if needed, and the AlphaBeta algorithm from SearchAlgos.py
         self.alpha = ALPHA_VALUE_INIT
         self.beta = BETA_VALUE_INIT
