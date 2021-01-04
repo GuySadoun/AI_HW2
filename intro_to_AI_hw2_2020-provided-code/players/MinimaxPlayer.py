@@ -2,19 +2,11 @@
 MiniMax Player
 """
 import time
-import traceback
-
 import numpy as np
-
 import utils
 import copy
-
-from Game import Game
 from SearchAlgos import MiniMax
 from players.AbstractPlayer import AbstractPlayer
-
-
-# TODO: you can import more modules, if needed
 
 
 class State:
@@ -248,7 +240,6 @@ class Player(AbstractPlayer):
                                     'value' is the value of this fruit.
         No output is expected.
         """
-        # erase the following line and implement this function. In case you choose not to use it, use 'pass' instead of the following line.
         current_fruits_pos = self.state.get_indexs_by_cond(lambda x: x > 2)
         for fruit_pos in current_fruits_pos:
             self.state.board[fruit_pos] = 0

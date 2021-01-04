@@ -4,16 +4,12 @@ MiniMax Player with AlphaBeta pruning
 import copy
 import time
 import numpy as np
-
 import utils
 from SearchAlgos import AlphaBeta
 from players.AbstractPlayer import AbstractPlayer
 from players.MinimaxPlayer import State
 from players.MinimaxPlayer import pos_feasible_on_board
 from utils import ALPHA_VALUE_INIT, BETA_VALUE_INIT
-
-
-# TODO: you can import more modules, if needed
 
 
 class Player(AbstractPlayer):
@@ -129,7 +125,6 @@ class Player(AbstractPlayer):
                                     'value' is the value of this fruit.
         No output is expected.
         """
-        # erase the following line and implement this function. In case you choose not to use it, use 'pass' instead of the following line.
         current_fruits_pos = self.state.get_indexs_by_cond(lambda x: x > 2)
         for fruit_pos in current_fruits_pos:
             self.state.board[fruit_pos] = 0
@@ -139,13 +134,23 @@ class Player(AbstractPlayer):
 
         assert len(self.state.get_indexs_by_cond(lambda x: x > 2)) == len(fruit_indexes)
 
-    ########## helper functions for MiniMax algorithm ##########
+    ########## helper functions for AlphaBeta algorithm ##########
     def utility_f(self, players_score, is_my_turn):
         if is_my_turn:
             players_score[0] -= self.penalty_score
         else:
             players_score[1] -= self.penalty_score
-        return players_score[0] - players_score[1]
+        if players_score[0] - players_score[1] > 0:
+            ret = 1
+        elif players_score[0] - players_score[1] < 0:
+            ret = -1
+        else:
+            ret = 0
+        if is_my_turn:
+            players_score[0] += self.penalty_score
+        else:
+            players_score[1] += self.penalty_score
+        return ret
 
     # returns possible directions to move
     def succ_f(self, state, pos):
