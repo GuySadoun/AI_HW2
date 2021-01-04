@@ -96,14 +96,6 @@ class Player(AbstractPlayer):
         self.pos = (self.pos[0] + move[0], self.pos[1] + move[1])
         return move
 
-        # update local board and pos
-        new_pos = (self.pos[0] + move[0], self.pos[1] + move[1]) if move is not None else self.pos
-        self.state.players_score[0] += self.state.board[new_pos]
-        self.state.board[self.pos] = -1
-        self.state.board[new_pos] = 1
-        self.pos = new_pos
-        return move
-
     def set_rival_move(self, pos):
         """Update your info, given the new position of the rival.
         input:
