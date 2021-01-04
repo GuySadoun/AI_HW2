@@ -6,6 +6,7 @@ import time
 import numpy as np
 
 import utils
+from Game import Game
 from SearchAlgos import AlphaBeta
 from players.AbstractPlayer import AbstractPlayer
 from players.MinimaxPlayer import State
@@ -17,6 +18,7 @@ class Player(AbstractPlayer):
     def __init__(self, game_time, penalty_score):
         AbstractPlayer.__init__(self, game_time,
                                 penalty_score)  # keep the inheritance of the parent's (AbstractPlayer) __init__()
+        self.game_time = game_time
         self.start_global_time = 0
         self.turn_counter = 0
         self.alpha = ALPHA_VALUE_INIT
@@ -46,7 +48,7 @@ class Player(AbstractPlayer):
         time_passed = self.start_global_time - time.time()
         current_time_left = self.game_time - time_passed
         number_of_reachable_slots = self.state.reachable_white_cells(player_id)
-        current_possible_turns = np.ceil(number_of_reachable_slots)
+        current_possible_turns = np.ceil(number_of_reachable_slots) / 2
         time_frame = current_time_left / current_possible_turns
         return time_frame
 
@@ -64,7 +66,7 @@ class Player(AbstractPlayer):
         alphabeta = AlphaBeta(self.utility_f, self.succ_f, self.perform_move_f, self.state.players_score,
                               goal=self.goal_f, heuristic_f=self.heuristic_f)
 
-        minimax_val = float('-inf')
+        ab_val = float('-inf')
         depth = 0
         children = self.succ_f(self.state, self.pos)
         move = children[0]
@@ -87,36 +89,29 @@ class Player(AbstractPlayer):
                 prev_val = state_copy.board[new_pos]
                 assert prev_val not in [-1, -2, 1, 2]
                 self.perform_move_f(state_copy, op, self.pos)
-                res = alphabeta.search(state_copy, depth, ALPHA_VALUE_INIT, BETA_VALUE_INIT, True)
-                if res == -2 or move is None:
-                    move = op if move is None else move
-                    # update local board and pos
-                    new_pos = (self.pos[0] + move[0], self.pos[1] + move[1])
-                    self.state.players_score[0] += self.state.board[new_pos]
-                    self.state.board[self.pos] = -1
-                    self.state.board[new_pos] = 1
-                    self.pos = new_pos
-                    return move
-                if res > minimax_val:
-                    minimax_val = res
+                if state_copy.players_score[0] - self.state.players_score[0] > 0:
+                    ab_val = (state_copy.players_score[0] - self.state.players_score[0] / self.penalty_score + 50)
+                    move = op  # just in case
+                res = alphabeta.search(state_copy, depth, False, ALPHA_VALUE_INIT, BETA_VALUE_INIT, True)
+                if res > ab_val:
+                    ab_val = res
                     move = op
                 self.perform_move_f(state_copy, op, new_pos, prev_val)
-                assert len(state_copy.get_indexs_by_cond(lambda x: x == 2)) == 1
-                assert len(state_copy.get_indexs_by_cond(lambda x: x == 1)) == 1
-                depth += 1
-            assert res != -1
             if res == 0 or res_for_prev_depth == res:
                 tribal_point += 1
-                if tribal_point == 3:
+                if tribal_point == 5:
+                    # print(f'here000 {res}')
                     break
             res_for_prev_depth = res
             depth += 1
+            if depth > len(self.state.board) > self.turn_counter:
+                break
             if state_copy.get_time_left() < 0.6:
-                # print(f'move decided = {move} with val = {minimax_val}')
+                # print(f'move decided = {move} with val = {ab_val}')
                 break
 
         # update local board and pos
-        new_pos = (self.pos[0] + move[0], self.pos[1] + move[1]) if move is not None else self.pos
+        new_pos = (self.pos[0] + move[0], self.pos[1] + move[1])
         self.state.players_score[0] += self.state.board[new_pos]
         self.state.board[self.pos] = -1
         self.state.board[new_pos] = 1
@@ -183,7 +178,8 @@ class Player(AbstractPlayer):
         return avail_op
 
     # gets an op and moves the player according to this op, prev_val will be passed before recursic call
-    def perform_move_f(self, state, op, curr_pos_on_board, prev_val=-2):
+    @staticmethod
+    def perform_move_f(state, op, curr_pos_on_board, prev_val=-2):
         state.turn_counter += 1 if prev_val == -2 else -1
         player_id = state.board[curr_pos_on_board]
         # assert player_id in [1, 2]
@@ -213,6 +209,8 @@ class Player(AbstractPlayer):
         opp_pos = set_indexes[0]
         option_for_opp = state.state_options(opp_pos)
         option_for_me = state.state_options(pos)
+        if option_for_me == 0:
+            return 0
         is_opp_reachable_state = state.is_players_connected()
         is_opp_reachable_game = self.state.is_players_connected()
         closest_md_for_me = float('inf')
@@ -250,7 +248,7 @@ class Player(AbstractPlayer):
             v1 = (1 / closest_md_for_me) * (closest_val / max_fruit)
             v2 = min(state.players_score[0] - self.state.players_score[0] / max_fruit, 1)
             v3 = min((1 / 3) * option_for_me, 1)
-            h_val = (10 / 21) * (v1 + v2) + (1 / 21) * v3
+            h_val = (5 / 21) * v1 + (15 / 21) * v2 + (1 / 21) * v3
         else:
             reachable_for_me_for_state = state.reachable_white_cells(player_id)
             if is_opp_reachable_state:  # close your enemy strategy - maximum h_val is 0.8
@@ -270,17 +268,7 @@ class Player(AbstractPlayer):
                     v7 = 1
                 else:
                     v7 = 0
-                list_d = [v1, v2, v3, v4, v5, v6, v7]
-                count = 0
-                for v in list_d:
-                    count += 1
-                    assert v <= 1
                 h_val = (1 / 10) * (v1 + v2 + v3 + v4 + v6) + (1 / 4) * v5 + (1 / 4) * v7
-                if h_val > 1:
-                    for v in list_d:
-                        count += 1
-                        assert v <= 1
-                        print(f'v{count} = {v}')
                 h_val *= 0.8
             else:  # staying alive strategy - maximum h_val is 0.5
                 strategy = 'SURVIVE!'
