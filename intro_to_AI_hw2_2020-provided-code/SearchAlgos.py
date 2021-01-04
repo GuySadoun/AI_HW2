@@ -41,7 +41,7 @@ class MiniMax(SearchAlgos):
         """
         pos = state.get_pos() if maximizing_player else state.get_opponent_pos()
         if self.goal(state, pos):
-            return self.utility(state.players_score, maximizing_player)
+            return self.utility(state, maximizing_player)
         if depth == 0:
             return self.h(state)
         if maximizing_player:
@@ -97,7 +97,7 @@ class AlphaBeta(SearchAlgos):
         """
         pos = state.get_pos() if maximizing_player else state.get_opponent_pos()
         if self.goal(state, pos):
-            return self.utility(state.players_score, maximizing_player)
+            return self.utility(state, pos, maximizing_player)
         if depth == 0:
             return self.h(state)
         if maximizing_player:

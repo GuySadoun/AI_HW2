@@ -127,22 +127,21 @@ class Player(AbstractPlayer):
         # assert len(self.state.get_indexs_by_cond(lambda x: x > 2)) == len(fruit_indexes)
 
     ########## helper functions for AlphaBeta algorithm ##########
-    def utility_f(self, players_score, is_my_turn):
-        if is_my_turn:
-            players_score[0] -= self.penalty_score
+    def utility_f(self, state, is_my_turn):
+        for_me = state.reachable_white_cells(1)
+        for_opp = state.reachable_white_cells(2)
+        me_score = state.players_score[0]
+        opp_score = state.players_score[1]
+        if is_my_turn and for_me == 0 and for_opp > 0:
+            me_score -= self.penalty_score
+        elif not is_my_turn and for_me > 0 and for_opp == 0:
+            opp_score -= self.penalty_score
+        if me_score - opp_score > 0:
+            return 1
+        elif me_score - opp_score < 0:
+            return -1
         else:
-            players_score[1] -= self.penalty_score
-        if players_score[0] - players_score[1] > 0:
-            ret = 1
-        elif players_score[0] - players_score[1] < 0:
-            ret = -1
-        else:
-            ret = 0
-        if is_my_turn:
-            players_score[0] += self.penalty_score
-        else:
-            players_score[1] += self.penalty_score
-        return ret
+            return 0
 
     # returns possible directions to move
     def succ_f(self, state, pos):
