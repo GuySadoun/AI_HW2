@@ -250,7 +250,7 @@ class Player(AbstractPlayer):
             v1 = (1 / closest_md_for_me) * (closest_val / max_fruit)
             v2 = min(state.players_score[0] - self.state.players_score[0] / max_fruit, 1)
             v3 = min((1 / 3) * option_for_me, 1)
-            h_val = (10 / 21) * (v1 + v2) + (1 / 21) * v3
+            h_val = (5 / 21) * v1 + (15 / 21) * v2 + (1 / 21) * v3
         else:
             reachable_for_me_for_state = state.reachable_white_cells(player_id)
             if is_opp_reachable_state:  # close your enemy strategy - maximum h_val is 0.8
@@ -280,7 +280,7 @@ class Player(AbstractPlayer):
                     for v in list_d:
                         count += 1
                         assert v <= 1
-                        print(f'v{count} = {v}')
+                        # print(f'v{count} = {v}')
                 h_val *= 0.8
             else:  # staying alive strategy - maximum h_val is 0.5
                 strategy = 'SURVIVE!'

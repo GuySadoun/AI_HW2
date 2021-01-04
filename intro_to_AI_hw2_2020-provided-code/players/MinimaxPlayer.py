@@ -353,7 +353,7 @@ class Player(AbstractPlayer):
             v1 = (1 / closest_md_for_me) * (closest_val / max_fruit)
             v2 = min(state.players_score[0] - self.state.players_score[0] / max_fruit, 1)
             v3 = min((1 / 3) * option_for_me, 1)
-            h_val = (1 / 4) * (v1 + v2) + (1 / 2) * v3
+            h_val = (5 / 21) * v1 + (15 / 21) * v2 + (1 / 21) * v3
         else:
             reachable_for_me_for_state = state.reachable_white_cells(player_id)
             if is_opp_reachable_state:                                           # close your enemy strategy - maximum h_val is 0.8
@@ -390,7 +390,7 @@ class Player(AbstractPlayer):
                 reachable_for_me_for_game = self.state.reachable_white_cells(player_id)
                 assert reachable_for_me_for_game > 0
                 v1 = min(reachable_for_me_for_state / reachable_for_me_for_game, 1)
-                h_val = (1 / 2) * v1
+                h_val = 0.5 * v1
 
         # print(f'strategy = {strategy}')
         # print(f'heuristic_f - val: {h_val}')
