@@ -9,7 +9,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     
-    parser.add_argument('-player1', default='SimplePlayer', type=str,
+    parser.add_argument('-player1', default='AlphabetaPlayer', type=str,
                         help='The type of the first player.',
                         choices=players_options)
     #SimplePlayer
@@ -17,7 +17,7 @@ if __name__ == "__main__":
                         help='The type of the second player.',
                         choices=players_options)
     
-    parser.add_argument('-board', default='rectangle_board.csv', type=str,
+    parser.add_argument('-board', default='fruit_on_right_board.csv', type=str,
                         help='Name of board file (.csv).')
 
     parser.add_argument('-move_time', default=5, type=float,
