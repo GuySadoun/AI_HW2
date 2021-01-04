@@ -15,7 +15,8 @@ from utils import ALPHA_VALUE_INIT, BETA_VALUE_INIT
 
 class Player(AbstractPlayer):
     def __init__(self, game_time, penalty_score):
-        AbstractPlayer.__init__(self, game_time, penalty_score) # keep the inheritance of the parent's (AbstractPlayer) __init__()
+        AbstractPlayer.__init__(self, game_time,
+                                penalty_score)  # keep the inheritance of the parent's (AbstractPlayer) __init__()
         self.start_global_time = 0
         self.turn_counter = 0
         self.alpha = ALPHA_VALUE_INIT
@@ -40,16 +41,14 @@ class Player(AbstractPlayer):
         self.state = State(board, players_score_init, 1)
         self.state.set_start_time(time.time())
 
-
     def time_slice(self):
         player_id = self.state.board[self.pos]
         time_passed = self.start_global_time - time.time()
         current_time_left = self.game_time - time_passed
         number_of_reachable_slots = self.state.reachable_white_cells(player_id)
         current_possible_turns = np.ceil(number_of_reachable_slots)
-        time_frame = current_time_left/current_possible_turns
+        time_frame = current_time_left / current_possible_turns
         return time_frame
-
 
     def make_move(self, time_limit, players_score):
         """Make move with this Player.
@@ -63,13 +62,14 @@ class Player(AbstractPlayer):
 
         self.turn_counter += 1
         alphabeta = AlphaBeta(self.utility_f, self.succ_f, self.perform_move_f, self.state.players_score,
-                          goal=self.goal_f, heuristic_f=self.heuristic_f)
+                              goal=self.goal_f, heuristic_f=self.heuristic_f)
 
-        move = None
         minimax_val = float('-inf')
-        depth = 1
+        depth = 0
         children = self.succ_f(self.state, self.pos)
-        tribal_point = 1
+        move = children[0]
+        res_for_prev_depth = 0
+        tribal_point = 0
         if len(children) == 1:
             move = children[0]
             new_pos = (self.pos[0] + move[0], self.pos[1] + move[1])
@@ -79,14 +79,10 @@ class Player(AbstractPlayer):
             self.pos = new_pos
             return move
         while True:
-            if self.turn_counter <= len(self.state.board):
-                # eating_fruit time method:
-                if depth > (len(self.state.board)-self.turn_counter+1):
-                    return move
+            state_copy = copy.deepcopy(self.state)
+            res = -1
             for op in children:
-                self.state.set_time_limit(current_time_slice / len(children))
-                state_copy = copy.deepcopy(self.state)
-
+                state_copy.set_time_limit(current_time_slice / len(children))
                 new_pos = (self.pos[0] + op[0], self.pos[1] + op[1])
                 prev_val = state_copy.board[new_pos]
                 assert prev_val not in [-1, -2, 1, 2]
@@ -108,9 +104,15 @@ class Player(AbstractPlayer):
                 assert len(state_copy.get_indexs_by_cond(lambda x: x == 2)) == 1
                 assert len(state_copy.get_indexs_by_cond(lambda x: x == 1)) == 1
                 depth += 1
-            tribal_point = minimax_val / tribal_point if not np.math.isnan(minimax_val) and not np.math.isnan(
-                tribal_point) else 1
-            if abs(tribal_point) - 1 < 0.01:
+            assert res != -1
+            if res == 0 or res_for_prev_depth == res:
+                tribal_point += 1
+                if tribal_point == 3:
+                    break
+            res_for_prev_depth = res
+            depth += 1
+            if state_copy.get_time_left() < 0.6:
+                # print(f'move decided = {move} with val = {minimax_val}')
                 break
 
         # update local board and pos
@@ -140,7 +142,6 @@ class Player(AbstractPlayer):
                                     'value' is the value of this fruit.
         No output is expected.
         """
-        # erase the following line and implement this function. In case you choose not to use it, use 'pass' instead of the following line.
         current_fruits_pos = self.state.get_indexs_by_cond(lambda x: x > 2)
         for fruit_pos in current_fruits_pos:
             self.state.board[fruit_pos] = 0
@@ -156,7 +157,17 @@ class Player(AbstractPlayer):
             players_score[0] -= self.penalty_score
         else:
             players_score[1] -= self.penalty_score
-        return players_score[0] - players_score[1]
+        if players_score[0] - players_score[1] > 0:
+            ret = 1
+        elif players_score[0] - players_score[1] < 0:
+            ret = -1
+        else:
+            ret = 0
+        if is_my_turn:
+            players_score[0] += self.penalty_score
+        else:
+            players_score[1] += self.penalty_score
+        return ret
 
     # returns possible directions to move
     def succ_f(self, state, pos):
@@ -171,28 +182,23 @@ class Player(AbstractPlayer):
                 avail_op.append(d)
         return avail_op
 
-    # gets an op and moves the player accroding to this op, prev_val will be passed before recursic call
-    def perform_move_f(self, state, op, pos, prev_val=-2):
-        assert len(state.get_indexs_by_cond(lambda x: x == 2)) == 1
-        assert len(state.get_indexs_by_cond(lambda x: x == 1)) == 1
-        player_id = state.board[pos]
-        if prev_val == -2:
-            state.board[pos] = -1
-            new_pos = (pos[0] + op[0], pos[1] + op[1])
+    # gets an op and moves the player according to this op, prev_val will be passed before recursic call
+    def perform_move_f(self, state, op, curr_pos_on_board, prev_val=-2):
+        state.turn_counter += 1 if prev_val == -2 else -1
+        player_id = state.board[curr_pos_on_board]
+        # assert player_id in [1, 2]
+        if prev_val == -2:  # forward
+            state.board[curr_pos_on_board] = -1
+            new_pos = (curr_pos_on_board[0] + op[0], curr_pos_on_board[1] + op[1])
             val_next_cell = state.board[new_pos[0]][new_pos[1]]
             state.players_score[int(player_id) - 1] += int(val_next_cell)
             state.board[new_pos] = player_id
-        else:
+        else:               # backwards
             assert prev_val not in [1, 2]
-            state.board[pos[0], pos[1]] = prev_val
-            if player_id not in [1, 2]:
-                print(player_id)
+            state.board[curr_pos_on_board] = prev_val
+            last_pos = (curr_pos_on_board[0] - op[0], curr_pos_on_board[1] - op[1])
             state.players_score[int(player_id) - 1] -= prev_val
-            last_pos = (pos[0] - op[0], pos[1] - op[1])
             state.board[last_pos] = player_id
-        assert len(state.get_indexs_by_cond(lambda x: x == 2)) == 1
-        assert len(state.get_indexs_by_cond(lambda x: x == 1)) == 1
-        return state
 
     def heuristic_f(self, state):
         # print('***************************************************')
@@ -222,7 +228,7 @@ class Player(AbstractPlayer):
                 reachable_for_state = state.reachable_white_cells(player_id)
                 if reachable_for_state - reachable_for_state_opp > 2:
                     strategy = 'SPLIT BOARD'
-                    return 1
+                    return 0.85
 
         for fruit in state.get_indexs_by_cond(lambda x: x > 2):  # find closest fruit and who's closer to max fruit
             fruits += 1
@@ -244,7 +250,7 @@ class Player(AbstractPlayer):
             v1 = (1 / closest_md_for_me) * (closest_val / max_fruit)
             v2 = min(state.players_score[0] - self.state.players_score[0] / max_fruit, 1)
             v3 = min((1 / 3) * option_for_me, 1)
-            h_val = (1 / 4) * (v1 + v2) + (1 / 2) * v3
+            h_val = (10 / 21) * (v1 + v2) + (1 / 21) * v3
         else:
             reachable_for_me_for_state = state.reachable_white_cells(player_id)
             if is_opp_reachable_state:  # close your enemy strategy - maximum h_val is 0.8
