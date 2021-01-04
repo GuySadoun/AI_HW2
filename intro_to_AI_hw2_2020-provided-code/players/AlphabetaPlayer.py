@@ -74,15 +74,15 @@ class Player(AbstractPlayer):
             for op in children:
                 new_pos = (self.pos[0] + op[0], self.pos[1] + op[1])
                 prev_val = state_copy.board[new_pos]
-                assert prev_val not in [-1, -2, 1, 2]
+                # assert prev_val not in [-1, -2, 1, 2]
                 self.perform_move_f(state_copy, op, self.pos)
                 res = alphabeta.search(state_copy, depth, ALPHA_VALUE_INIT, BETA_VALUE_INIT, True)
                 if res > minimax_val:
                     minimax_val = res
                     move = op
                 self.perform_move_f(state_copy, op, new_pos, prev_val)
-                assert len(state_copy.get_indexs_by_cond(lambda x: x == 2)) == 1
-                assert len(state_copy.get_indexs_by_cond(lambda x: x == 1)) == 1
+                # assert len(state_copy.get_indexs_by_cond(lambda x: x == 2)) == 1
+                # assert len(state_copy.get_indexs_by_cond(lambda x: x == 1)) == 1
             # print('##########################################################')
             # print(f'for depth - {depth} max val - {minimax_val} move - {move}')
             if res == 0 or res_for_prev_depth == res:

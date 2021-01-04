@@ -99,8 +99,7 @@ class AlphaBeta(SearchAlgos):
         if self.goal(state, pos):
             return self.utility(state.players_score, maximizing_player)
         if depth == 0:
-            val = self.h(state, pos)
-            return val
+            return self.h(state)
         if maximizing_player:
             curr_max = float('-inf')  # minus infinity
             for op in self.succ(state, pos):
@@ -111,18 +110,19 @@ class AlphaBeta(SearchAlgos):
                 if res == -2 and not is_root:
                     self.perform_move(state, op, next_cell, prev_val)  # reversed operator
                     return res  # Interrupted
-                elif is_root:
-                    self.perform_move(state, op, next_cell, prev_val)  # reversed operator
-                    return curr_max
                 if res > curr_max:
                     curr_max = res
+                elif is_root:
+                    state.print_board()
+                    self.perform_move(state, op, next_cell, prev_val)  # reversed operator
+                    return curr_max
                 self.perform_move(state, op, next_cell, prev_val)  # reversed operator
                 # start alpha beta adaption:
                 alpha = max(curr_max, alpha)
                 if curr_max >= beta:
                     return float('inf')
                 # end alpha beta adaption
-                if state.get_time_left() < 0.7:
+                if state.get_time_left() < 0.6:
                     return -2  # Interrupted
             return curr_max
         else:
@@ -133,16 +133,12 @@ class AlphaBeta(SearchAlgos):
                 self.perform_move(state, op, pos)
                 res = self.search(state, depth - 1, not maximizing_player, alpha, beta)
                 if res == -2:
-                    self.perform_move(state, op, next_cell, prev_val)  # reversed operator
+                    self.perform_move(state, op, next_cell, prev_val)
                     return res  # Interrupted
                 if res < curr_min:
                     curr_min = res
                 self.perform_move(state, op, next_cell, prev_val)  # reversed operator
-                # start alpha beta adaption:
-                beta = min(curr_min, beta)
-                if curr_min <= alpha:
-                    return float('-inf')
-                # end alpha beta adaption
-                if state.get_time_left() < 0.7:
+                if state.get_time_left() < 0.6:
                     return -2  # Interrupted
             return curr_min
+

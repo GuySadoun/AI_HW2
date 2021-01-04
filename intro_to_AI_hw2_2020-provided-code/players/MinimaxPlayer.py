@@ -208,8 +208,8 @@ class Player(AbstractPlayer):
                     minimax_val = res
                     move = op
                 self.perform_move_f(state_copy, op, new_pos, prev_val)
-                assert len(state_copy.get_indexs_by_cond(lambda x: x == 2)) == 1
-                assert len(state_copy.get_indexs_by_cond(lambda x: x == 1)) == 1
+                # assert len(state_copy.get_indexs_by_cond(lambda x: x == 2)) == 1
+                # assert len(state_copy.get_indexs_by_cond(lambda x: x == 1)) == 1
             # print('##########################################################')
             # print(f'for depth - {depth} max val - {minimax_val} move - {move}')
             if res == 0 or res_for_prev_depth == res:
